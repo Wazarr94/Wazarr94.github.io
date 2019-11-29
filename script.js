@@ -178,13 +178,13 @@ function keyDownHandler(e) {
     if (e.key == "x") {
         shotPressed = true;
     }
-    if (e.key == "&") {
+    if (e.code == "Digit1") {
         zoom = zoom_levels[0];
     }
-    if (e.key == "é") {
+    if (e.code == "Digit2") {
         zoom = zoom_levels[1];
     }
-    if (e.key == "\"") {
+    if (e.code == "Digit3") {
         zoom = zoom_levels[2];
     }
 }
