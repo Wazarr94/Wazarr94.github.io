@@ -287,18 +287,18 @@ function keyUpHandler (e) {
 }
 
 function collisionTransformation (physics, vertexes = null) {
-    var cMask = physics["cMask"];
+    var cMask = physics.cMask;
     var y = 0;
     cMask.forEach((x) => {
         y |= haxball.collisionFlags[x];
     });
-    physics["cMask"] = y;
-    var cGroup = physics["cGroup"];
+    physics.cMask = y;
+    var cGroup = physics.cGroup;
     y = 0;
     cGroup.forEach((x) => {
         y |= haxball.collisionFlags[x];
     });
-    physics["cGroup"] = y;
+    physics.cGroup = y;
     // physics["color"] = parseInt(physics["color"], 16);
     if (physics.pos !== undefined) {
         physics.x = physics.pos[0];
@@ -311,7 +311,7 @@ function collisionTransformation (physics, vertexes = null) {
         physics.v1 = [vertexes[physics.v1].x, vertexes[physics.v1].y];
     }
     delete physics.pos;
-    delete physics["trait"];
+    delete physics.trait;
     return physics;
 }
 
@@ -333,7 +333,50 @@ function rotate (xspeed, yspeed, angle) {
     return rotatedVelocities;
 }
 
-function resolveCollision (disc1, disc2) {
+function getLinesIntersection(a, b) {
+    if (b[1] * a[0] === a[1] * b[0]) return [null, null] // no solution
+    if (a[0] === 0) return [(b[1] * a[2] - a[1] * b[2]) / (b[0] * a[1]), -a[2] / a[1]];
+    return [-a[2] / a[0] + (a[1] * (b[2] * a[0] - a[2] * b[0])) / (a[0] * (b[1] * a[0] - b[0] * a[1])), (b[0] * a[2] - a[0] * b[2]) / (b[1] * a[0] - b[0] * a[1])];
+}
+
+function vectN (vect) { // returns the Euclidean norm of a vector 
+    return Math.sqrt(Math.pow(vect.x, 2) + Math.pow(vect.y, 2));
+}
+
+function angleV (vectI, vectO) { // returns the angle between 2 vectors
+    return Math.acos((vectI.x * vectO.x + vectI.y * vectO.y) / (vectN(vectI) * vectN(vectO)));
+}
+
+function vectR (vectI, vectO) { // returns the vector of the trajectory of the ball after a rebound from the ball with g.v. vectI to the wall with g.v. vectO 
+    if (vectI.x == 0) {
+        const y_temp = (vectN(vectI) * Math.cos(Math.PI - 2 * angleV(vectI, vectO))) / vectI.y;
+        return { "x": vectN(vectI) * (vectN(vectO) * Math.cos(angleV(vectI, vectO)) - vectO.y * y_temp) / vectO.x, "y": vectN(vectI) * y_temp };
+    }
+    else if (vectO.y == 0) {
+        const x_temp = (vectN(vectO) * Math.cos(angleV(vectI, vectO))) / vectO.x;
+        return { "x": vectN(vectI) * x_temp, "y": vectN(vectI) * (vectN(vectI) * Math.cos(Math.PI - 2 * angleV(vectI, vectO)) - vectI.x * x_temp) / vectI.y };
+    }
+    else {
+        const x_temp = (vectO.y * vectN(vectI) * Math.cos(Math.PI - 2 * angleV(vectI, vectO)) - vectI.y * vectN(vectO) * Math.cos(angleV(vectI, vectO))) / (vectI.x * vectO.y - vectI.y * vectO.x);
+        return { "x": vectN(vectI) * x_temp, "y": vectN(vectI) * (vectN(vectO) * Math.cos(angleV(vectI, vectO)) - vectO.x * x_temp) / vectO.y };
+    }
+}
+
+function resolveDPCollision(disc, plane) {
+    // TODO: Finish this
+
+    // const [xIntersection, yIntersection] = getLinesIntersection([-plane.normal[0], -plane.normal[1], plane.dist], [-disc.yspeed, -disc.xspeed, disc.yspeed * disc.x + disc.xspeed * disc.y]);
+    // console.log([xIntersection, yIntersection])
+
+    // const angle = angleV({ x: disc.xspeed, y: disc.yspeed }, { x: plane.normal[1], y: -plane.normal[0] })
+
+    // const vectRebound = vectR({ x: disc.xspeed, y: disc.yspeed }, { x: plane.normal[1], y: -plane.normal[0] });
+    disc.xspeed *= (-Math.abs(plane.normal[0]) || 1);
+    disc.yspeed *= (-Math.abs(plane.normal[1]) || 1);
+}
+
+function resolveDDCollision (disc1, disc2) {
+    // TODO: discs where invMass = 0. Otherwise, the disc-disc collision is starting to get close to the Haxball one, not perfect
     const xVelocityDiff = disc1.xspeed - disc2.xspeed;
     const yVelocityDiff = disc1.yspeed - disc2.yspeed;
 
@@ -350,8 +393,8 @@ function resolveCollision (disc1, disc2) {
         const u1 = rotate(disc1.xspeed, disc1.yspeed, angle);
         const u2 = rotate(disc2.xspeed, disc2.yspeed, angle);
 
-        const v1 = { x: (disc1.bCoef * m2 * (u2[0] - u1[0]) + m1 * u1[0] + m2 * u2[0]) / (m1 + m2), y: u1[1] };
-        const v2 = { x: (disc2.bCoef * m1 * (u1[0] - u2[0]) + m1 * u1[0] + m2 * u2[0]) / (m1 + m2), y: u2[1] };
+        const v1 = { x: (disc1.bCoef * disc2.bCoef * m2 * (u2[0] - u1[0]) + m1 * u1[0] + m2 * u2[0]) / (m1 + m2), y: u1[1] };
+        const v2 = { x: (disc1.bCoef * disc2.bCoef * m1 * (u1[0] - u2[0]) + m1 * u1[0] + m2 * u2[0]) / (m1 + m2), y: u2[1] };
 
         const vFinal1 = rotate(v1.x, v1.y, -angle);
         const vFinal2 = rotate(v2.x, v2.y, -angle);
@@ -374,37 +417,35 @@ function draw () {
 
     var direction = [0, 0];
 
-    if (rightPressed && playerPhysics["x"] < stadium.width - playerPhysics.radius) {
+    if (rightPressed) {
         direction[0]++;
     }
-    if (leftPressed && playerPhysics["x"] > -stadium.width + playerPhysics.radius) {
+    if (leftPressed) {
         direction[0]--;
     }
-    if (downPressed && playerPhysics["y"] < stadium.height - playerPhysics.radius) {
+    if (downPressed) {
         direction[1]++;
     }
-    if (upPressed && playerPhysics["y"] > -stadium.height + playerPhysics.radius) {
+    if (upPressed) {
         direction[1]--;
     }
 
     direction = normalise(direction);
-
-    playerPhysics["xspeed"] = (playerPhysics["xspeed"] + direction[0] * (shotPressed ? playerPhysics.kickingAcceleration : playerPhysics.acceleration));
-    playerPhysics["yspeed"] = (playerPhysics["yspeed"] + direction[1] * (shotPressed ? playerPhysics.kickingAcceleration : playerPhysics.acceleration));
+    playerPhysics.xspeed = (playerPhysics.xspeed + direction[0] * (shotPressed ? playerPhysics.kickingAcceleration : playerPhysics.acceleration));
+    playerPhysics.yspeed = (playerPhysics.yspeed + direction[1] * (shotPressed ? playerPhysics.kickingAcceleration : playerPhysics.acceleration));
 
     discs.forEach((d_a, i_a) => {
         planes.forEach((p) => {
             if (((d_a.cGroup & p.cMask) !== 0) && ((d_a.cMask & p.cGroup) !== 0)) {
                 if (Math.abs((-p.normal[0] * d_a.x - p.normal[1] * d_a.y + p.dist) / (Math.sqrt(p.normal[1] ** 2 + p.normal[0] ** 2))) < d_a.radius) {
-                    console.log("collision")
-                    console.log(p)
+                    resolveDPCollision(d_a, p);
                 }
             }
         });
         discs.filter((_, i) => i > i_a).forEach((d_b) => {
-            if ((d_a.cGroup & d_b.cMask != 0) && (d_a.cMask & d_b.cGroup != 0)) {
+            if (((d_a.cGroup & d_b.cMask) != 0) && ((d_a.cMask & d_b.cGroup) != 0)) {
                 if (dist([d_a.x, d_a.y], [d_b.x, d_b.y]) <= d_a.radius + d_b.radius) {
-                    resolveCollision(d_a, d_b);
+                    resolveDDCollision(d_a, d_b);
                 }
             }
         });
@@ -415,45 +456,7 @@ function draw () {
         d.yspeed *= d.damping;
         d.x += d.xspeed;
         d.y += d.yspeed;
-        if (d["x"] > stadium.width - d.radius) {
-            d["x"] = stadium.width - d.radius;
-            d["xspeed"] = 0;
-        }
-        if (d["x"] < -stadium.width + d.radius) {
-            d["x"] = -stadium.width + d.radius;
-            d["xspeed"] = 0;
-        }
-        if (d["y"] > stadium.height - d.radius) {
-            d["y"] = stadium.height - d.radius;
-            d["yspeed"] = 0;
-        }
-        if (d["y"] < -stadium.height + d.radius) {
-            d["y"] = -stadium.height + d.radius;
-            d["yspeed"] = 0;
-        }
     });
-
-    // // draw red
-    // ctx.beginPath();
-    // ctx.arc(playerPhysics.x, playerPhysics.y, playerPhysics.radius, 0, Math.PI*2, true);
-    // ctx.fillStyle = haxball.red_color;
-    // ctx.strokeStyle = shotPressed ? 'rgb(255,255,255)' : 'rgb(0,0,0)';
-    // ctx.lineWidth = 2;
-    // ctx.fill();
-    // ctx.stroke();
-    // // ctx.clip();
-    // // ctx.font = "16px sans-serif";
-    // // ctx.fillStyle = 'rgb(255,255,255)';
-    // // ctx.fillText("1", playerPhysics["x"] - 5, playerPhysics["y"] + 5);
-    // ctx.closePath();
-
-    // ctx.beginPath();
-    // ctx.moveTo(playerPhysics["x"] + playerPhysics.radius + 10, playerPhysics["y"]);
-    // ctx.strokeStyle = 'rgb(255,255,255)';
-    // ctx.globalAlpha = 0.3;
-    // ctx.arc(playerPhysics["x"], playerPhysics["y"], playerPhysics.radius + 10, 0, Math.PI*2, true);
-    // ctx.stroke();
-    // ctx.closePath();
 }
 
 function segment_arc (st, segment) {
