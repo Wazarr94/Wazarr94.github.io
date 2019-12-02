@@ -159,17 +159,10 @@ var type_properties = {
 var stadium = JSON.parse(`{"name":"Classic","width":420,"height":200,"spawnDistance":277.5,"bg":{"type":"grass","width":370,"height":170,"kickOffRadius":75,"cornerRadius":0},"vertexes":[{"x":-370,"y":170,"trait":"ballArea"},{"x":-370,"y":64,"trait":"ballArea"},{"x":-370,"y":-64,"trait":"ballArea"},{"x":-370,"y":-170,"trait":"ballArea"},{"x":370,"y":170,"trait":"ballArea"},{"x":370,"y":64,"trait":"ballArea"},{"x":370,"y":-64,"trait":"ballArea"},{"x":370,"y":-170,"trait":"ballArea"},{"x":0,"y":200,"trait":"kickOffBarrier"},{"x":0,"y":75,"trait":"kickOffBarrier"},{"x":0,"y":-75,"trait":"kickOffBarrier"},{"x":0,"y":-200,"trait":"kickOffBarrier"},{"x":-380,"y":-64,"trait":"goalNet"},{"x":-400,"y":-44,"trait":"goalNet"},{"x":-400,"y":44,"trait":"goalNet"},{"x":-380,"y":64,"trait":"goalNet"},{"x":380,"y":-64,"trait":"goalNet"},{"x":400,"y":-44,"trait":"goalNet"},{"x":400,"y":44,"trait":"goalNet"},{"x":380,"y":64,"trait":"goalNet"}],"segments":[{"v0":0,"v1":1,"trait":"ballArea"},{"v0":2,"v1":3,"trait":"ballArea"},{"v0":4,"v1":5,"trait":"ballArea"},{"v0":6,"v1":7,"trait":"ballArea"},{"v0":12,"v1":13,"trait":"goalNet","curve":-90},{"v0":13,"v1":14,"trait":"goalNet"},{"v0":14,"v1":15,"trait":"goalNet","curve":-90},{"v0":16,"v1":17,"trait":"goalNet","curve":90},{"v0":17,"v1":18,"trait":"goalNet"},{"v0":18,"v1":19,"trait":"goalNet","curve":90},{"v0":8,"v1":9,"trait":"kickOffBarrier"},{"v0":9,"v1":10,"trait":"kickOffBarrier","curve":180,"cGroup":["blueKO"]},{"v0":9,"v1":10,"trait":"kickOffBarrier","curve":-180,"cGroup":["redKO"]},{"v0":10,"v1":11,"trait":"kickOffBarrier"}],"goals":[{"p0":[-370,64],"p1":[-370,-64],"team":"red"},{"p0":[370,64],"p1":[370,-64],"team":"blue"}],"discs":[{"pos":[-370,64],"trait":"goalPost","color":"FFCCCC"},{"pos":[-370,-64],"trait":"goalPost","color":"FFCCCC"},{"pos":[370,64],"trait":"goalPost","color":"CCCCFF"},{"pos":[370,-64],"trait":"goalPost","color":"CCCCFF"}],"planes":[{"normal":[0,1],"dist":-170,"trait":"ballArea"},{"normal":[0,-1],"dist":-170,"trait":"ballArea"},{"normal":[0,1],"dist":-200,"bCoef":0.1},{"normal":[0,-1],"dist":-200,"bCoef":0.1},{"normal":[1,0],"dist":-420,"bCoef":0.1},{"normal":[-1,0],"dist":-420,"bCoef":0.1}],"traits":{"ballArea":{"vis":false,"bCoef":1,"cMask":["ball"]},"goalPost":{"radius":8,"invMass":0,"bCoef":0.5},"goalNet":{"vis":true,"bCoef":0.1,"cMask":["ball"]},"kickOffBarrier":{"vis":false,"bCoef":0.1,"cGroup":["redKO","blueKO"],"cMask":["red","blue"]}}}`);
 var stadium2 = JSON.parse(`{"name":"Big","width":600,"height":270,"spawnDistance":350,"bg":{"type":"grass","width":550,"height":240,"kickOffRadius":80,"cornerRadius":0},"vertexes":[{"x":-550,"y":240,"trait":"ballArea"},{"x":-550,"y":80,"trait":"ballArea"},{"x":-550,"y":-80,"trait":"ballArea"},{"x":-550,"y":-240,"trait":"ballArea"},{"x":550,"y":240,"trait":"ballArea"},{"x":550,"y":80,"trait":"ballArea"},{"x":550,"y":-80,"trait":"ballArea"},{"x":550,"y":-240,"trait":"ballArea"},{"x":0,"y":270,"trait":"kickOffBarrier"},{"x":0,"y":80,"trait":"kickOffBarrier"},{"x":0,"y":-80,"trait":"kickOffBarrier"},{"x":0,"y":-270,"trait":"kickOffBarrier"},{"x":-560,"y":-80,"trait":"goalNet"},{"x":-580,"y":-60,"trait":"goalNet"},{"x":-580,"y":60,"trait":"goalNet"},{"x":-560,"y":80,"trait":"goalNet"},{"x":560,"y":-80,"trait":"goalNet"},{"x":580,"y":-60,"trait":"goalNet"},{"x":580,"y":60,"trait":"goalNet"},{"x":560,"y":80,"trait":"goalNet"}],"segments":[{"v0":0,"v1":1,"trait":"ballArea"},{"v0":2,"v1":3,"trait":"ballArea"},{"v0":4,"v1":5,"trait":"ballArea"},{"v0":6,"v1":7,"trait":"ballArea"},{"v0":12,"v1":13,"trait":"goalNet","curve":-90},{"v0":13,"v1":14,"trait":"goalNet"},{"v0":14,"v1":15,"trait":"goalNet","curve":-90},{"v0":16,"v1":17,"trait":"goalNet","curve":90},{"v0":17,"v1":18,"trait":"goalNet"},{"v0":18,"v1":19,"trait":"goalNet","curve":90},{"v0":8,"v1":9,"trait":"kickOffBarrier"},{"v0":9,"v1":10,"trait":"kickOffBarrier","curve":180,"cGroup":["blueKO"]},{"v0":9,"v1":10,"trait":"kickOffBarrier","curve":-180,"cGroup":["redKO"]},{"v0":10,"v1":11,"trait":"kickOffBarrier"}],"goals":[{"p0":[-550,80],"p1":[-550,-80],"team":"red"},{"p0":[550,80],"p1":[550,-80],"team":"blue"}],"discs":[{"pos":[-550,80],"trait":"goalPost","color":"FFCCCC"},{"pos":[-550,-80],"trait":"goalPost","color":"FFCCCC"},{"pos":[550,80],"trait":"goalPost","color":"CCCCFF"},{"pos":[550,-80],"trait":"goalPost","color":"CCCCFF"}],"planes":[{"normal":[0,1],"dist":-240,"trait":"ballArea"},{"normal":[0,-1],"dist":-240,"trait":"ballArea"},{"normal":[0,1],"dist":-270,"bCoef":0.1},{"normal":[0,-1],"dist":-270,"bCoef":0.1},{"normal":[1,0],"dist":-600,"bCoef":0.1},{"normal":[-1,0],"dist":-600,"bCoef":0.1}],"traits":{"ballArea":{"vis":false,"bCoef":1,"cMask":["ball"]},"goalPost":{"radius":8,"invMass":0,"bCoef":0.5, "color" : "000000"},"goalNet":{"vis":true,"bCoef":0.1,"cMask":["ball"]},"kickOffBarrier":{"vis":false,"bCoef":0.1,"cGroup":["redKO","blueKO"],"cMask":["red","blue"]}}}`);
 
-var discs = [];
+var stadium_copy = JSON.parse(JSON.stringify(stadium));
 
-var ballPhysics = haxball.ballPhysics;
-if (stadium.ballPhysics !== undefined) {
-    for (const [key, value] of Object.entries(haxball.ballPhysics)) {
-        ballPhysics[key] = stadium.ballPhysics[key] == undefined ? value : stadium.ballPhysics[key];
-    }
-}
-discs.push(collisionTransformation(ballPhysics));
-
-stadium.discs.forEach((d) => {
+var discs = stadium_copy.discs;
+discs.forEach((d) => {
     for (const [key, value] of Object.entries(haxball.discPhysics)) {
         if (d[key] === undefined) d[key] = value;
     }
@@ -178,22 +171,60 @@ stadium.discs.forEach((d) => {
             d[key] = value;
         }
     }
-    discs.push(collisionTransformation(d));
+    d = collisionTransformation(d);
 });
 
-var playerPhysics = haxball.playerPhysics;
-if (stadium.playerPhysics !== undefined) {
-    for (const [key, value] of Object.entries(haxball.playerPhysics)) {
-        playerPhysics[key] = stadium.playerPhysics[key] == undefined ? value : stadium.playerPhysics[key];
-    }
+var ballPhysics = stadium_copy.ballPhysics || {};
+for (const [key, value] of Object.entries(haxball.ballPhysics)) {
+    if (ballPhysics[key] === undefined) ballPhysics[key] = value;
+}
+discs.unshift(collisionTransformation(ballPhysics));
+
+var playerPhysics = stadium_copy.playerPhysics || {};
+for (const [key, value] of Object.entries(haxball.playerPhysics)) {
+    if (playerPhysics[key] === undefined) playerPhysics[key] = value;
 }
 playerPhysics["pos"] = [-stadium.spawnDistance, 0];
 
 discs.push(collisionTransformation(playerPhysics));
 
-var segments = stadium.segments;
-segments.forEach((s) => {
+var vertexes = stadium_copy.vertexes;
+vertexes.forEach((v) => {
+    for (const [key, value] of Object.entries(haxball.vertexPhysics)) {
+        if (v[key] === undefined) v[key] = value;
+    }
+    if (v["trait"] !== undefined) {
+        for (const [key, value] of Object.entries(stadium.traits[v["trait"]])) {
+            v[key] = value;
+        }
+    }
+    v = (collisionTransformation(v));
+});
 
+var segments = stadium_copy.segments;
+segments.forEach((s) => {
+    for (const [key, value] of Object.entries(haxball.segmentPhysics)) {
+        if (s[key] === undefined) s[key] = value;
+    }
+    if (s["trait"] !== undefined) {
+        for (const [key, value] of Object.entries(stadium.traits[s["trait"]])) {
+            s[key] = value;
+        }
+    }
+    s = (collisionTransformation(s, vertexes));
+});
+
+var planes = stadium_copy.planes;
+planes.forEach((p) => {
+    for (const [key, value] of Object.entries(haxball.planePhysics)) {
+        if (p[key] === undefined) p[key] = value;
+    }
+    if (p["trait"] !== undefined) {
+        for (const [key, value] of Object.entries(stadium.traits[p["trait"]])) {
+            p[key] = value;
+        }
+    }
+    p = (collisionTransformation(p));
 });
 
 var frameRate = 60;
@@ -255,7 +286,7 @@ function keyUpHandler (e) {
     }
 }
 
-function collisionTransformation (physics) {
+function collisionTransformation (physics, vertexes = null) {
     var cMask = physics["cMask"];
     var y = 0;
     cMask.forEach((x) => {
@@ -269,10 +300,16 @@ function collisionTransformation (physics) {
     });
     physics["cGroup"] = y;
     // physics["color"] = parseInt(physics["color"], 16);
-    physics.x = physics.pos[0];
-    physics.y = physics.pos[1];
-    physics.xspeed = 0;
-    physics.yspeed = 0;
+    if (physics.pos !== undefined) {
+        physics.x = physics.pos[0];
+        physics.y = physics.pos[1];
+        physics.xspeed = 0;
+        physics.yspeed = 0;
+    }
+    if (physics.v0 !== undefined && vertexes !== null) {
+        physics.v0 = [vertexes[physics.v0].x, vertexes[physics.v0].y];
+        physics.v1 = [vertexes[physics.v1].x, vertexes[physics.v1].y];
+    }
     delete physics.pos;
     delete physics["trait"];
     return physics;
@@ -356,9 +393,19 @@ function draw () {
     playerPhysics["yspeed"] = (playerPhysics["yspeed"] + direction[1] * (shotPressed ? playerPhysics.kickingAcceleration : playerPhysics.acceleration));
 
     discs.forEach((d_a, i_a) => {
+        planes.forEach((p) => {
+            if (((d_a.cGroup & p.cMask) !== 0) && ((d_a.cMask & p.cGroup) !== 0)) {
+                if (Math.abs((-p.normal[0] * d_a.x - p.normal[1] * d_a.y + p.dist) / (Math.sqrt(p.normal[1] ** 2 + p.normal[0] ** 2))) < d_a.radius) {
+                    console.log("collision")
+                    console.log(p)
+                }
+            }
+        });
         discs.filter((_, i) => i > i_a).forEach((d_b) => {
-            if (dist([d_a.x, d_a.y], [d_b.x, d_b.y]) <= d_a.radius + d_b.radius) {
-                resolveCollision(d_a, d_b);
+            if ((d_a.cGroup & d_b.cMask != 0) && (d_a.cMask & d_b.cGroup != 0)) {
+                if (dist([d_a.x, d_a.y], [d_b.x, d_b.y]) <= d_a.radius + d_b.radius) {
+                    resolveCollision(d_a, d_b);
+                }
             }
         });
     });
@@ -385,32 +432,6 @@ function draw () {
             d["yspeed"] = 0;
         }
     });
-
-    ctx.beginPath();
-    ctx.moveTo(playerPhysics.x + playerPhysics.radius + 10, playerPhysics.y);
-    ctx.strokeStyle = 'rgb(255,255,255)';
-    ctx.globalAlpha = 0.3;
-    ctx.arc(playerPhysics.x, playerPhysics.y, playerPhysics.radius + 10, 0, Math.PI * 2, true);
-    ctx.stroke();
-    ctx.closePath();
-
-    ctx.beginPath();
-    ctx.globalAlpha = 1;
-    ctx.arc(playerPhysics.x, playerPhysics.y, playerPhysics.radius, 0, Math.PI * 2, true);
-    ctx.fillStyle = haxball.red_color;
-    ctx.strokeStyle = shotPressed ? 'rgb(255,255,255)' : 'rgb(0,0,0)';
-    ctx.lineWidth = 2;
-    ctx.fill();
-    ctx.stroke();
-
-    ctx.clip();
-    ctx.font = "bold 14pt sans-serif";
-    var avatar = "2";
-    ctx.fillStyle = 'rgb(255,255,255)';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = "middle";
-    ctx.fillText(avatar, playerPhysics.x, playerPhysics.y);
-    ctx.closePath();
 
     // // draw red
     // ctx.beginPath();
@@ -570,26 +591,45 @@ function render (st) {
         render_segment_arc(ctx, segment, segment_arc(st, segment));
     });
 
-    $.each(st.discs, function (i, disc) {
-        disc = complete(st, disc);
-        ctx.beginPath();
-        var radius = disc.radius !== undefined ? disc.radius : haxball.discPhysics.radius;
-        ctx.arc(disc.x, disc.y, radius, 0, Math.PI * 2, true);
-        ctx.strokeStyle = 'rgb(0,0,0)';
-        ctx.lineWidth = 2;
-        ctx.fillStyle = color_to_style(disc.color, haxball.discPhysics.color);
-        ctx.fill();
-        ctx.stroke();
-    });
+    $.each(discs, function (i, disc) {
+        if (i !== discs.length - 1) {
+            ctx.beginPath();
+            var radius = disc.radius;
+            ctx.arc(disc.x, disc.y, radius, 0, Math.PI * 2, true);
+            ctx.strokeStyle = 'rgb(0,0,0)';
+            ctx.lineWidth = 2;
+            ctx.fillStyle = color_to_style(disc.color, haxball.discPhysics.color);
+            ctx.fill();
+            ctx.stroke();
+        }
+        else {
+            ctx.beginPath();
+            ctx.moveTo(playerPhysics.x + playerPhysics.radius + 10, playerPhysics.y);
+            ctx.strokeStyle = 'rgb(255,255,255)';
+            ctx.globalAlpha = 0.3;
+            ctx.arc(playerPhysics.x, playerPhysics.y, playerPhysics.radius + 10, 0, Math.PI * 2, true);
+            ctx.stroke();
+            ctx.closePath();
 
-    // draw puck
-    ctx.beginPath();
-    ctx.arc(discs[0].x, discs[0].y, ballPhysics.radius, 0, Math.PI * 2, true);
-    ctx.fillStyle = color_to_style(ballPhysics.color);
-    ctx.strokeStyle = 'rgb(0,0,0)';
-    ctx.lineWidth = 2;
-    ctx.fill();
-    ctx.stroke();
+            ctx.beginPath();
+            ctx.globalAlpha = 1;
+            ctx.arc(playerPhysics.x, playerPhysics.y, playerPhysics.radius, 0, Math.PI * 2, true);
+            ctx.fillStyle = haxball.red_color;
+            ctx.strokeStyle = shotPressed ? 'rgb(255,255,255)' : 'rgb(0,0,0)';
+            ctx.lineWidth = 2;
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.clip();
+            ctx.font = "bold 14pt sans-serif";
+            var avatar = "2";
+            ctx.fillStyle = 'rgb(255,255,255)';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = "middle";
+            ctx.fillText(avatar, playerPhysics.x, playerPhysics.y);
+            ctx.closePath();
+        }
+    });
 
 }
 
