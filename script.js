@@ -1,9 +1,10 @@
-// TODO : Kicking the ball
-// TODO : Finish discs-segments
 // TODO : Better frame animation system
+// TODO : Finish discs-segments
+// TODO : Score bar
+// TODO : Clean-up the code
 // TODO : Camera system
-// TODO : Ability to have multiple players
 // TODO : Menu
+// TODO : Ability to have multiple players
 // TODO : Recording system
 
 var canvas = document.getElementById("canvas_div");
@@ -21,158 +22,160 @@ var canvas_rect = [-150, -75, 150, 75];
 
 //===== Haxball Values
 
-// values hardcoded in haxball
-var haxball = {
-    hockey: {
-        bg_color: 'rgb(85, 85, 85)',
-        border_color: 'rgb(233,204,110)'
-    },
-    grass: {
-        bg_color: 'rgb(113,140,90)',
-        border_color: 'rgb(199,230,189)'
-    },
-    segment_color: 'rgb(0,0,0)',
-    red_color: 'rgb(229,110,86)',
-    blue_color: 'rgb(86,137,229)',
-    playerPhysics: {
-        radius: 15,
-        bCoef: 0.5,
-        invMass: 0.5,
-        damping: 0.96,
-        acceleration: 0.1,
-        kickingAcceleration: 0.07,
-        kickingDamping: 0.96,
-        kickStrength: 5,
-        pos: [0, 0],
-        cMask: ["all"],
-        cGroup: ["red"]
-    },
-    ballPhysics: {
-        radius: 10,
-        bCoef: 0.5,
-        invMass: 1,
-        damping: 0.99,
-        color: "FFFFFF",
-        pos: [0, 0],
-        cMask: ["all"],
-        cGroup: ["ball"]
-    },
-    discPhysics: {
-        radius: 10,
-        bCoef: 0.5,
-        invMass: 0,
-        damping: 0.99,
-        color: 'rgb(255,255,255)',
-        cMask: ["all"],
-        cGroup: ["all"]
-    },
-    segmentPhysics: {
-        curve: 0,
-        bCoef: 1,
-        cGroup: ["wall"],
-        cMask: ["all"]
-    },
-    planePhysics: {
-        bCoef: 1,
-        cGroup: ["wall"],
-        cMask: ["all"]
-    },
-    vertexPhysics: {
-        bCoef: 1,
-        cGroup: ["wall"],
-        cMask: ["all"]
-    },
-    collisionFlags: {
-        all: 63,
-        ball: 1,
-        blue: 4,
-        blueKO: 16,
-        c0: 268435456,
-        c1: 536870912,
-        c2: 1073741824,
-        c3: -2147483648,
-        kick: 64,
-        red: 2,
-        redKO: 8,
-        score: 128,
-        wall: 32
-    }
-};
-
-var zoom_levels = [1, 1.25, 1.5];
-var zoom = zoom_levels[0];
-
-
-var stadium = JSON.parse(`{"name":"Classic","width":420,"height":200,"spawnDistance":277.5,"bg":{"type":"grass","width":370,"height":170,"kickOffRadius":75,"cornerRadius":0},"vertexes":[{"x":-370,"y":170,"trait":"ballArea"},{"x":-370,"y":64,"trait":"ballArea"},{"x":-370,"y":-64,"trait":"ballArea"},{"x":-370,"y":-170,"trait":"ballArea"},{"x":370,"y":170,"trait":"ballArea"},{"x":370,"y":64,"trait":"ballArea"},{"x":370,"y":-64,"trait":"ballArea"},{"x":370,"y":-170,"trait":"ballArea"},{"x":0,"y":200,"trait":"kickOffBarrier"},{"x":0,"y":75,"trait":"kickOffBarrier"},{"x":0,"y":-75,"trait":"kickOffBarrier"},{"x":0,"y":-200,"trait":"kickOffBarrier"},{"x":-380,"y":-64,"trait":"goalNet"},{"x":-400,"y":-44,"trait":"goalNet"},{"x":-400,"y":44,"trait":"goalNet"},{"x":-380,"y":64,"trait":"goalNet"},{"x":380,"y":-64,"trait":"goalNet"},{"x":400,"y":-44,"trait":"goalNet"},{"x":400,"y":44,"trait":"goalNet"},{"x":380,"y":64,"trait":"goalNet"}],"segments":[{"v0":0,"v1":1,"trait":"ballArea"},{"v0":2,"v1":3,"trait":"ballArea"},{"v0":4,"v1":5,"trait":"ballArea"},{"v0":6,"v1":7,"trait":"ballArea"},{"v0":12,"v1":13,"trait":"goalNet","curve":-90},{"v0":13,"v1":14,"trait":"goalNet"},{"v0":14,"v1":15,"trait":"goalNet","curve":-90},{"v0":16,"v1":17,"trait":"goalNet","curve":90},{"v0":17,"v1":18,"trait":"goalNet"},{"v0":18,"v1":19,"trait":"goalNet","curve":90},{"v0":8,"v1":9,"trait":"kickOffBarrier"},{"v0":9,"v1":10,"trait":"kickOffBarrier","curve":180,"cGroup":["blueKO"]},{"v0":9,"v1":10,"trait":"kickOffBarrier","curve":-180,"cGroup":["redKO"]},{"v0":10,"v1":11,"trait":"kickOffBarrier"}],"goals":[{"p0":[-370,64],"p1":[-370,-64],"team":"red"},{"p0":[370,64],"p1":[370,-64],"team":"blue"}],"discs":[{"pos":[-370,64],"trait":"goalPost","color":"FFCCCC"},{"pos":[-370,-64],"trait":"goalPost","color":"FFCCCC"},{"pos":[370,64],"trait":"goalPost","color":"CCCCFF"},{"pos":[370,-64],"trait":"goalPost","color":"CCCCFF"}],"planes":[{"normal":[0,1],"dist":-170,"trait":"ballArea"},{"normal":[0,-1],"dist":-170,"trait":"ballArea"},{"normal":[0,1],"dist":-200,"bCoef":0.1},{"normal":[0,-1],"dist":-200,"bCoef":0.1},{"normal":[1,0],"dist":-420,"bCoef":0.1},{"normal":[-1,0],"dist":-420,"bCoef":0.1}],"traits":{"ballArea":{"vis":false,"bCoef":1,"cMask":["ball"]},"goalPost":{"radius":8,"invMass":0,"bCoef":0.5},"goalNet":{"vis":true,"bCoef":0.1,"cMask":["ball"]},"kickOffBarrier":{"vis":false,"bCoef":0.1,"cGroup":["redKO","blueKO"],"cMask":["red","blue"]}}}`);
-var stadiumP = JSON.parse(`{"name":"Classic","width":420,"height":200,"spawnDistance":277.5,"bg":{"type":"grass","width":370,"height":170,"kickOffRadius":75,"cornerRadius":0},"vertexes":[{"x":-370,"y":170,"trait":"ballArea"},{"x":-370,"y":64,"trait":"ballArea"},{"x":-370,"y":-64,"trait":"ballArea"},{"x":-370,"y":-170,"trait":"ballArea"},{"x":370,"y":170,"trait":"ballArea"},{"x":370,"y":64,"trait":"ballArea"},{"x":370,"y":-64,"trait":"ballArea"},{"x":370,"y":-170,"trait":"ballArea"},{"x":0,"y":200,"trait":"kickOffBarrier"},{"x":0,"y":75,"trait":"kickOffBarrier"},{"x":0,"y":-75,"trait":"kickOffBarrier"},{"x":0,"y":-200,"trait":"kickOffBarrier"},{"x":-380,"y":-64,"trait":"goalNet"},{"x":-400,"y":-44,"trait":"goalNet"},{"x":-400,"y":44,"trait":"goalNet"},{"x":-380,"y":64,"trait":"goalNet"},{"x":380,"y":-64,"trait":"goalNet"},{"x":400,"y":-44,"trait":"goalNet"},{"x":400,"y":44,"trait":"goalNet"},{"x":380,"y":64,"trait":"goalNet"}],"segments":[{"v0":0,"v1":1,"trait":"ballArea"},{"v0":2,"v1":3,"trait":"ballArea"},{"v0":4,"v1":5,"trait":"ballArea"},{"v0":6,"v1":7,"trait":"ballArea"},{"v0":12,"v1":13,"trait":"goalNet","curve":-90},{"v0":13,"v1":14,"trait":"goalNet"},{"v0":14,"v1":15,"trait":"goalNet","curve":-90},{"v0":16,"v1":17,"trait":"goalNet","curve":90},{"v0":17,"v1":18,"trait":"goalNet"},{"v0":18,"v1":19,"trait":"goalNet","curve":90},{"v0":8,"v1":9,"trait":"kickOffBarrier"},{"v0":9,"v1":10,"trait":"kickOffBarrier","curve":180,"cGroup":["blueKO"]},{"v0":9,"v1":10,"trait":"kickOffBarrier","curve":-180,"cGroup":["redKO"]},{"v0":10,"v1":11,"trait":"kickOffBarrier"}],"goals":[{"p0":[-370,64],"p1":[-370,-64],"team":"red"},{"p0":[370,64],"p1":[370,-64],"team":"blue"}],"discs":[{"pos":[-370,64],"trait":"goalPost","color":"FFCCCC"},{"pos":[-370,-64],"trait":"goalPost","color":"FFCCCC"},{"pos":[370,64],"trait":"goalPost","color":"CCCCFF"},{"pos":[370,-64],"trait":"goalPost","color":"CCCCFF"}],"planes":[{"normal":[0,1],"dist":-170,"trait":"ballArea"},{"normal":[0,-1],"dist":-170,"trait":"ballArea"},{"normal":[0,1],"dist":-200,"bCoef":0.1},{"normal":[0,-1],"dist":-200,"bCoef":0.1},{"normal":[1,0],"dist":-420,"bCoef":0.1},{"normal":[-1,0],"dist":-420,"bCoef":0.1},{"bCoef":1,"dist":0,"normal":[-0.5,0.5]}],"traits":{"ballArea":{"vis":false,"bCoef":1,"cMask":["ball"]},"goalPost":{"radius":8,"invMass":0,"bCoef":0.5},"goalNet":{"vis":true,"bCoef":0.1,"cMask":["ball"]},"kickOffBarrier":{"vis":false,"bCoef":0.1,"cGroup":["redKO","blueKO"],"cMask":["red","blue"]}}}`);
-var stadium2 = JSON.parse(`{"name":"Big","width":600,"height":270,"spawnDistance":350,"bg":{"type":"grass","width":550,"height":240,"kickOffRadius":80,"cornerRadius":0},"vertexes":[{"x":-550,"y":240,"trait":"ballArea"},{"x":-550,"y":80,"trait":"ballArea"},{"x":-550,"y":-80,"trait":"ballArea"},{"x":-550,"y":-240,"trait":"ballArea"},{"x":550,"y":240,"trait":"ballArea"},{"x":550,"y":80,"trait":"ballArea"},{"x":550,"y":-80,"trait":"ballArea"},{"x":550,"y":-240,"trait":"ballArea"},{"x":0,"y":270,"trait":"kickOffBarrier"},{"x":0,"y":80,"trait":"kickOffBarrier"},{"x":0,"y":-80,"trait":"kickOffBarrier"},{"x":0,"y":-270,"trait":"kickOffBarrier"},{"x":-560,"y":-80,"trait":"goalNet"},{"x":-580,"y":-60,"trait":"goalNet"},{"x":-580,"y":60,"trait":"goalNet"},{"x":-560,"y":80,"trait":"goalNet"},{"x":560,"y":-80,"trait":"goalNet"},{"x":580,"y":-60,"trait":"goalNet"},{"x":580,"y":60,"trait":"goalNet"},{"x":560,"y":80,"trait":"goalNet"}],"segments":[{"v0":0,"v1":1,"trait":"ballArea"},{"v0":2,"v1":3,"trait":"ballArea"},{"v0":4,"v1":5,"trait":"ballArea"},{"v0":6,"v1":7,"trait":"ballArea"},{"v0":12,"v1":13,"trait":"goalNet","curve":-90},{"v0":13,"v1":14,"trait":"goalNet"},{"v0":14,"v1":15,"trait":"goalNet","curve":-90},{"v0":16,"v1":17,"trait":"goalNet","curve":90},{"v0":17,"v1":18,"trait":"goalNet"},{"v0":18,"v1":19,"trait":"goalNet","curve":90},{"v0":8,"v1":9,"trait":"kickOffBarrier"},{"v0":9,"v1":10,"trait":"kickOffBarrier","curve":180,"cGroup":["blueKO"]},{"v0":9,"v1":10,"trait":"kickOffBarrier","curve":-180,"cGroup":["redKO"]},{"v0":10,"v1":11,"trait":"kickOffBarrier"}],"goals":[{"p0":[-550,80],"p1":[-550,-80],"team":"red"},{"p0":[550,80],"p1":[550,-80],"team":"blue"}],"discs":[{"pos":[-550,80],"trait":"goalPost","color":"FFCCCC"},{"pos":[-550,-80],"trait":"goalPost","color":"FFCCCC"},{"pos":[550,80],"trait":"goalPost","color":"CCCCFF"},{"pos":[550,-80],"trait":"goalPost","color":"CCCCFF"}],"planes":[{"normal":[0,1],"dist":-240,"trait":"ballArea"},{"normal":[0,-1],"dist":-240,"trait":"ballArea"},{"normal":[0,1],"dist":-270,"bCoef":0.1},{"normal":[0,-1],"dist":-270,"bCoef":0.1},{"normal":[1,0],"dist":-600,"bCoef":0.1},{"normal":[-1,0],"dist":-600,"bCoef":0.1}],"traits":{"ballArea":{"vis":false,"bCoef":1,"cMask":["ball"]},"goalPost":{"radius":8,"invMass":0,"bCoef":0.5, "color" : "000000"},"goalNet":{"vis":true,"bCoef":0.1,"cMask":["ball"]},"kickOffBarrier":{"vis":false,"bCoef":0.1,"cGroup":["redKO","blueKO"],"cMask":["red","blue"]}}}`);
-
-var stadium_copy = JSON.parse(JSON.stringify(stadium));
-
-var discs = stadium_copy.discs;
-discs.forEach((d) => {
-    for (const [key, value] of Object.entries(haxball.discPhysics)) {
-        if (d[key] === undefined) d[key] = value;
-    }
-    if (d.trait !== undefined) {
-        for (const [key, value] of Object.entries(stadium.traits[d.trait])) {
-            d[key] = value;
+if (1) {
+    // values hardcoded in haxball
+    var haxball = {
+        hockey: {
+            bg_color: 'rgb(85, 85, 85)',
+            border_color: 'rgb(233,204,110)'
+        },
+        grass: {
+            bg_color: 'rgb(113,140,90)',
+            border_color: 'rgb(199,230,189)'
+        },
+        segment_color: 'rgb(0,0,0)',
+        red_color: 'rgb(229,110,86)',
+        blue_color: 'rgb(86,137,229)',
+        playerPhysics: {
+            radius: 15,
+            bCoef: 0.5,
+            invMass: 0.5,
+            damping: 0.96,
+            acceleration: 0.1,
+            kickingAcceleration: 0.07,
+            kickingDamping: 0.96,
+            kickStrength: 5,
+            pos: [0, 0],
+            cMask: ["all"],
+            cGroup: ["red"]
+        },
+        ballPhysics: {
+            radius: 10,
+            bCoef: 0.5,
+            invMass: 1,
+            damping: 0.99,
+            color: "FFFFFF",
+            pos: [0, 0],
+            cMask: ["all"],
+            cGroup: ["ball"]
+        },
+        discPhysics: {
+            radius: 10,
+            bCoef: 0.5,
+            invMass: 0,
+            damping: 0.99,
+            color: 'rgb(255,255,255)',
+            cMask: ["all"],
+            cGroup: ["all"]
+        },
+        segmentPhysics: {
+            curve: 0,
+            bCoef: 1,
+            cGroup: ["wall"],
+            cMask: ["all"]
+        },
+        planePhysics: {
+            bCoef: 1,
+            cGroup: ["wall"],
+            cMask: ["all"]
+        },
+        vertexPhysics: {
+            bCoef: 1,
+            cGroup: ["wall"],
+            cMask: ["all"]
+        },
+        collisionFlags: {
+            all: 63,
+            ball: 1,
+            blue: 4,
+            blueKO: 16,
+            c0: 268435456,
+            c1: 536870912,
+            c2: 1073741824,
+            c3: -2147483648,
+            kick: 64,
+            red: 2,
+            redKO: 8,
+            score: 128,
+            wall: 32
         }
+    };
+    
+    var zoom_levels = [1, 1.25, 1.5, 1.75, 2, 2.25, 2.5];
+    var zoom = zoom_levels[0];
+    
+    
+    var stadium = JSON.parse(`{"name":"Classic","width":420,"height":200,"spawnDistance":277.5,"bg":{"type":"grass","width":370,"height":170,"kickOffRadius":75,"cornerRadius":0},"vertexes":[{"x":-370,"y":170,"trait":"ballArea"},{"x":-370,"y":64,"trait":"ballArea"},{"x":-370,"y":-64,"trait":"ballArea"},{"x":-370,"y":-170,"trait":"ballArea"},{"x":370,"y":170,"trait":"ballArea"},{"x":370,"y":64,"trait":"ballArea"},{"x":370,"y":-64,"trait":"ballArea"},{"x":370,"y":-170,"trait":"ballArea"},{"x":0,"y":200,"trait":"kickOffBarrier"},{"x":0,"y":75,"trait":"kickOffBarrier"},{"x":0,"y":-75,"trait":"kickOffBarrier"},{"x":0,"y":-200,"trait":"kickOffBarrier"},{"x":-380,"y":-64,"trait":"goalNet"},{"x":-400,"y":-44,"trait":"goalNet"},{"x":-400,"y":44,"trait":"goalNet"},{"x":-380,"y":64,"trait":"goalNet"},{"x":380,"y":-64,"trait":"goalNet"},{"x":400,"y":-44,"trait":"goalNet"},{"x":400,"y":44,"trait":"goalNet"},{"x":380,"y":64,"trait":"goalNet"}],"segments":[{"v0":0,"v1":1,"trait":"ballArea"},{"v0":2,"v1":3,"trait":"ballArea"},{"v0":4,"v1":5,"trait":"ballArea"},{"v0":6,"v1":7,"trait":"ballArea"},{"v0":12,"v1":13,"trait":"goalNet","curve":-90},{"v0":13,"v1":14,"trait":"goalNet"},{"v0":14,"v1":15,"trait":"goalNet","curve":-90},{"v0":16,"v1":17,"trait":"goalNet","curve":90},{"v0":17,"v1":18,"trait":"goalNet"},{"v0":18,"v1":19,"trait":"goalNet","curve":90},{"v0":8,"v1":9,"trait":"kickOffBarrier"},{"v0":9,"v1":10,"trait":"kickOffBarrier","curve":180,"cGroup":["blueKO"]},{"v0":9,"v1":10,"trait":"kickOffBarrier","curve":-180,"cGroup":["redKO"]},{"v0":10,"v1":11,"trait":"kickOffBarrier"}],"goals":[{"p0":[-370,64],"p1":[-370,-64],"team":"red"},{"p0":[370,64],"p1":[370,-64],"team":"blue"}],"discs":[{"pos":[-370,64],"trait":"goalPost","color":"FFCCCC"},{"pos":[-370,-64],"trait":"goalPost","color":"FFCCCC"},{"pos":[370,64],"trait":"goalPost","color":"CCCCFF"},{"pos":[370,-64],"trait":"goalPost","color":"CCCCFF"}],"planes":[{"normal":[0,1],"dist":-170,"trait":"ballArea"},{"normal":[0,-1],"dist":-170,"trait":"ballArea"},{"normal":[0,1],"dist":-200,"bCoef":0.1},{"normal":[0,-1],"dist":-200,"bCoef":0.1},{"normal":[1,0],"dist":-420,"bCoef":0.1},{"normal":[-1,0],"dist":-420,"bCoef":0.1}],"traits":{"ballArea":{"vis":false,"bCoef":1,"cMask":["ball"]},"goalPost":{"radius":8,"invMass":0,"bCoef":0.5},"goalNet":{"vis":true,"bCoef":0.1,"cMask":["ball"]},"kickOffBarrier":{"vis":false,"bCoef":0.1,"cGroup":["redKO","blueKO"],"cMask":["red","blue"]}}}`);
+    var stadiumP = JSON.parse(`{"name":"Classic","width":420,"height":200,"spawnDistance":277.5,"bg":{"type":"grass","width":370,"height":170,"kickOffRadius":75,"cornerRadius":0},"vertexes":[{"x":-370,"y":170,"trait":"ballArea"},{"x":-370,"y":64,"trait":"ballArea"},{"x":-370,"y":-64,"trait":"ballArea"},{"x":-370,"y":-170,"trait":"ballArea"},{"x":370,"y":170,"trait":"ballArea"},{"x":370,"y":64,"trait":"ballArea"},{"x":370,"y":-64,"trait":"ballArea"},{"x":370,"y":-170,"trait":"ballArea"},{"x":0,"y":200,"trait":"kickOffBarrier"},{"x":0,"y":75,"trait":"kickOffBarrier"},{"x":0,"y":-75,"trait":"kickOffBarrier"},{"x":0,"y":-200,"trait":"kickOffBarrier"},{"x":-380,"y":-64,"trait":"goalNet"},{"x":-400,"y":-44,"trait":"goalNet"},{"x":-400,"y":44,"trait":"goalNet"},{"x":-380,"y":64,"trait":"goalNet"},{"x":380,"y":-64,"trait":"goalNet"},{"x":400,"y":-44,"trait":"goalNet"},{"x":400,"y":44,"trait":"goalNet"},{"x":380,"y":64,"trait":"goalNet"}],"segments":[{"v0":0,"v1":1,"trait":"ballArea"},{"v0":2,"v1":3,"trait":"ballArea"},{"v0":4,"v1":5,"trait":"ballArea"},{"v0":6,"v1":7,"trait":"ballArea"},{"v0":12,"v1":13,"trait":"goalNet","curve":-90},{"v0":13,"v1":14,"trait":"goalNet"},{"v0":14,"v1":15,"trait":"goalNet","curve":-90},{"v0":16,"v1":17,"trait":"goalNet","curve":90},{"v0":17,"v1":18,"trait":"goalNet"},{"v0":18,"v1":19,"trait":"goalNet","curve":90},{"v0":8,"v1":9,"trait":"kickOffBarrier"},{"v0":9,"v1":10,"trait":"kickOffBarrier","curve":180,"cGroup":["blueKO"]},{"v0":9,"v1":10,"trait":"kickOffBarrier","curve":-180,"cGroup":["redKO"]},{"v0":10,"v1":11,"trait":"kickOffBarrier"}],"goals":[{"p0":[-370,64],"p1":[-370,-64],"team":"red"},{"p0":[370,64],"p1":[370,-64],"team":"blue"}],"discs":[{"pos":[-370,64],"trait":"goalPost","color":"FFCCCC"},{"pos":[-370,-64],"trait":"goalPost","color":"FFCCCC"},{"pos":[370,64],"trait":"goalPost","color":"CCCCFF"},{"pos":[370,-64],"trait":"goalPost","color":"CCCCFF"}],"planes":[{"normal":[0,1],"dist":-170,"trait":"ballArea"},{"normal":[0,-1],"dist":-170,"trait":"ballArea"},{"normal":[0,1],"dist":-200,"bCoef":0.1},{"normal":[0,-1],"dist":-200,"bCoef":0.1},{"normal":[1,0],"dist":-420,"bCoef":0.1},{"normal":[-1,0],"dist":-420,"bCoef":0.1},{"bCoef":1,"dist":0,"normal":[-0.5,0.5]}],"traits":{"ballArea":{"vis":false,"bCoef":1,"cMask":["ball"]},"goalPost":{"radius":8,"invMass":0,"bCoef":0.5},"goalNet":{"vis":true,"bCoef":0.1,"cMask":["ball"]},"kickOffBarrier":{"vis":false,"bCoef":0.1,"cGroup":["redKO","blueKO"],"cMask":["red","blue"]}}}`);
+    var stadium2 = JSON.parse(`{"name":"Big","width":600,"height":270,"spawnDistance":350,"bg":{"type":"grass","width":550,"height":240,"kickOffRadius":80,"cornerRadius":0},"vertexes":[{"x":-550,"y":240,"trait":"ballArea"},{"x":-550,"y":80,"trait":"ballArea"},{"x":-550,"y":-80,"trait":"ballArea"},{"x":-550,"y":-240,"trait":"ballArea"},{"x":550,"y":240,"trait":"ballArea"},{"x":550,"y":80,"trait":"ballArea"},{"x":550,"y":-80,"trait":"ballArea"},{"x":550,"y":-240,"trait":"ballArea"},{"x":0,"y":270,"trait":"kickOffBarrier"},{"x":0,"y":80,"trait":"kickOffBarrier"},{"x":0,"y":-80,"trait":"kickOffBarrier"},{"x":0,"y":-270,"trait":"kickOffBarrier"},{"x":-560,"y":-80,"trait":"goalNet"},{"x":-580,"y":-60,"trait":"goalNet"},{"x":-580,"y":60,"trait":"goalNet"},{"x":-560,"y":80,"trait":"goalNet"},{"x":560,"y":-80,"trait":"goalNet"},{"x":580,"y":-60,"trait":"goalNet"},{"x":580,"y":60,"trait":"goalNet"},{"x":560,"y":80,"trait":"goalNet"}],"segments":[{"v0":0,"v1":1,"trait":"ballArea"},{"v0":2,"v1":3,"trait":"ballArea"},{"v0":4,"v1":5,"trait":"ballArea"},{"v0":6,"v1":7,"trait":"ballArea"},{"v0":12,"v1":13,"trait":"goalNet","curve":-90},{"v0":13,"v1":14,"trait":"goalNet"},{"v0":14,"v1":15,"trait":"goalNet","curve":-90},{"v0":16,"v1":17,"trait":"goalNet","curve":90},{"v0":17,"v1":18,"trait":"goalNet"},{"v0":18,"v1":19,"trait":"goalNet","curve":90},{"v0":8,"v1":9,"trait":"kickOffBarrier"},{"v0":9,"v1":10,"trait":"kickOffBarrier","curve":180,"cGroup":["blueKO"]},{"v0":9,"v1":10,"trait":"kickOffBarrier","curve":-180,"cGroup":["redKO"]},{"v0":10,"v1":11,"trait":"kickOffBarrier"}],"goals":[{"p0":[-550,80],"p1":[-550,-80],"team":"red"},{"p0":[550,80],"p1":[550,-80],"team":"blue"}],"discs":[{"pos":[-550,80],"trait":"goalPost","color":"FFCCCC"},{"pos":[-550,-80],"trait":"goalPost","color":"FFCCCC"},{"pos":[550,80],"trait":"goalPost","color":"CCCCFF"},{"pos":[550,-80],"trait":"goalPost","color":"CCCCFF"}],"planes":[{"normal":[0,1],"dist":-240,"trait":"ballArea"},{"normal":[0,-1],"dist":-240,"trait":"ballArea"},{"normal":[0,1],"dist":-270,"bCoef":0.1},{"normal":[0,-1],"dist":-270,"bCoef":0.1},{"normal":[1,0],"dist":-600,"bCoef":0.1},{"normal":[-1,0],"dist":-600,"bCoef":0.1}],"traits":{"ballArea":{"vis":false,"bCoef":1,"cMask":["ball"]},"goalPost":{"radius":8,"invMass":0,"bCoef":0.5, "color" : "000000"},"goalNet":{"vis":true,"bCoef":0.1,"cMask":["ball"]},"kickOffBarrier":{"vis":false,"bCoef":0.1,"cGroup":["redKO","blueKO"],"cMask":["red","blue"]}}}`);
+    
+    var stadium_copy = JSON.parse(JSON.stringify(stadium));
+    
+    var discs = stadium_copy.discs;
+    discs.forEach((d) => {
+        for (const [key, value] of Object.entries(haxball.discPhysics)) {
+            if (d[key] === undefined) d[key] = value;
+        }
+        if (d.trait !== undefined) {
+            for (const [key, value] of Object.entries(stadium.traits[d.trait])) {
+                d[key] = value;
+            }
+        }
+        d = collisionTransformation(d);
+    });
+    
+    var ballPhysics = stadium_copy.ballPhysics || {};
+    for (const [key, value] of Object.entries(haxball.ballPhysics)) {
+        if (ballPhysics[key] === undefined) ballPhysics[key] = value;
     }
-    d = collisionTransformation(d);
-});
-
-var ballPhysics = stadium_copy.ballPhysics || {};
-for (const [key, value] of Object.entries(haxball.ballPhysics)) {
-    if (ballPhysics[key] === undefined) ballPhysics[key] = value;
+    discs.unshift(collisionTransformation(ballPhysics));
+    
+    var playerPhysics = stadium_copy.playerPhysics || {};
+    for (const [key, value] of Object.entries(haxball.playerPhysics)) {
+        if (playerPhysics[key] === undefined) playerPhysics[key] = value;
+    }
+    playerPhysics.pos = [-stadium.spawnDistance, 0];
+    discs.push(collisionTransformation(playerPhysics));
+    
+    var vertexes = stadium_copy.vertexes;
+    vertexes.forEach((v) => {
+        for (const [key, value] of Object.entries(haxball.vertexPhysics)) {
+            if (v[key] === undefined) v[key] = value;
+        }
+        if (v.trait !== undefined) {
+            for (const [key, value] of Object.entries(stadium.traits[v.trait])) {
+                v[key] = value;
+            }
+        }
+        v = collisionTransformation(v);
+    });
+    
+    var segments = stadium_copy.segments;
+    segments.forEach((s) => {
+        for (const [key, value] of Object.entries(haxball.segmentPhysics)) {
+            if (s[key] === undefined) s[key] = value;
+        }
+        if (s.trait !== undefined) {
+            for (const [key, value] of Object.entries(stadium.traits[s.trait])) {
+                s[key] = value;
+            }
+        }
+        s = collisionTransformation(s, vertexes);
+    });
+    
+    var planes = stadium_copy.planes;
+    planes.forEach((p) => {
+        for (const [key, value] of Object.entries(haxball.planePhysics)) {
+            if (p[key] === undefined) p[key] = value;
+        }
+        if (p.trait !== undefined) {
+            for (const [key, value] of Object.entries(stadium.traits[p.trait])) {
+                p[key] = value;
+            }
+        }
+        p = collisionTransformation(p);
+    });
 }
-discs.unshift(collisionTransformation(ballPhysics));
-
-var playerPhysics = stadium_copy.playerPhysics || {};
-for (const [key, value] of Object.entries(haxball.playerPhysics)) {
-    if (playerPhysics[key] === undefined) playerPhysics[key] = value;
-}
-playerPhysics.pos = [-stadium.spawnDistance, 0];
-discs.push(collisionTransformation(playerPhysics));
-
-var vertexes = stadium_copy.vertexes;
-vertexes.forEach((v) => {
-    for (const [key, value] of Object.entries(haxball.vertexPhysics)) {
-        if (v[key] === undefined) v[key] = value;
-    }
-    if (v.trait !== undefined) {
-        for (const [key, value] of Object.entries(stadium.traits[v.trait])) {
-            v[key] = value;
-        }
-    }
-    v = collisionTransformation(v);
-});
-
-var segments = stadium_copy.segments;
-segments.forEach((s) => {
-    for (const [key, value] of Object.entries(haxball.segmentPhysics)) {
-        if (s[key] === undefined) s[key] = value;
-    }
-    if (s.trait !== undefined) {
-        for (const [key, value] of Object.entries(stadium.traits[s.trait])) {
-            s[key] = value;
-        }
-    }
-    s = collisionTransformation(s, vertexes);
-});
-
-var planes = stadium_copy.planes;
-planes.forEach((p) => {
-    for (const [key, value] of Object.entries(haxball.planePhysics)) {
-        if (p[key] === undefined) p[key] = value;
-    }
-    if (p.trait !== undefined) {
-        for (const [key, value] of Object.entries(stadium.traits[p.trait])) {
-            p[key] = value;
-        }
-    }
-    p = collisionTransformation(p);
-});
 
 var frameRate = 60;
 
@@ -181,9 +184,12 @@ var leftPressed = false;
 var upPressed = false;
 var downPressed = false;
 var shotPressed = false;
+var kickReset = false;
 
 load_tile('grass');
 load_tile('hockey');
+
+discs[0].cGroup = 193;
 
 document.addEventListener("keydown", keyDownHandler, false);
 document.addEventListener("keyup", keyUpHandler, false);
@@ -193,7 +199,11 @@ var avatarCanvasCtx;
 var avatarPattern;
 
 createAvatarCanvas();
-getAvatarPattern("WW");
+getAvatarPattern("🍟");
+
+function checkPointInSegment(x, y, v0, v1) {
+    return ((x - v0[0]) * (x - v1[0]) + (y - v0[1]) * (y - v1[1]) <= 0);
+}
 
 function createNickCanvas() { // canvas for nickname
     var a = window.document.createElement("canvas");
@@ -214,13 +224,18 @@ function getRGBA(a) {
     return "rgba(" + [(a & 16711680) >>> 16, (a & 65280) >>> 8, a & 255].join() + ",255)"
 }
 
+function checkKick() {
+    if (kickReset) return !shotPressed;
+    return shotPressed;
+}
+
 function getAvatarPattern(avatar) { // get avatar pattern
-    var b = [15035990];
+    var b = [15035990, 4566879, 456658800, 458779];
     if (b.length > 0) {
         avatarCanvasCtx.save();
         avatarCanvasCtx.translate(32, 32);
-        avatarCanvasCtx.rotate(3.141592653589793 * 0 / 128);
-        for (var c = -32, d = 64 / b.length, e = 0; e < b.length; e++) { // custom color
+        avatarCanvasCtx.rotate(3.141592653589793 * 32 / 128);
+        for (var c = -32, d = 64 / b.length, e = 0; e < b.length; e++) {
             avatarCanvasCtx.fillStyle = getRGBA(b[e]);
             avatarCanvasCtx.fillRect(c, -32, d + 4, 64);
             c += d;
@@ -230,15 +245,15 @@ function getAvatarPattern(avatar) { // get avatar pattern
         avatarCanvasCtx.textAlign = "center";
         avatarCanvasCtx.textBaseline = "alphabetic";
         avatarCanvasCtx.font = "900 34px 'Arial Black','Arial Bold',Gadget,sans-serif";
-        avatarCanvasCtx.fillText(avatar, 32, 44);
-        avatarPattern = avatarCanvasCtx.createPattern(avatarCanvasCtx.canvas, "repeat")
+        avatarCanvasCtx.fillText(avatar.substring(0, 2), 32, 44);
+        avatarPattern = avatarCanvasCtx.createPattern(avatarCanvasCtx.canvas, "no-repeat");
     }
 }
 
 function drawPlayerDisc(player) { // draws (player) discs
     ctx.beginPath();
-    ctx.fillStyle = avatarPattern; // avatar pattern
-    ctx.strokeStyle = shotPressed ? "white" : "black";
+    ctx.fillStyle = avatarPattern;
+    ctx.strokeStyle = checkKick() ? "white" : "black";
     ctx.beginPath();
     ctx.arc(player.x, player.y, player.radius, 0, 2 * Math.PI, false);
     ctx.save();
@@ -247,8 +262,8 @@ function drawPlayerDisc(player) { // draws (player) discs
     ctx.scale(c, c);
     ctx.translate(-32, -32);
     ctx.fill();
-    ctx.restore()
-    ctx.stroke()
+    ctx.restore();
+    ctx.stroke();
 }
 
 function drawPlayerDiscExtLine(player) {
@@ -306,6 +321,18 @@ function keyDownHandler (e) {
     if (e.code == "Digit3") {
         zoom = zoom_levels[2];
     }
+    if (e.code == "Digit4") {
+        zoom = zoom_levels[3];
+    }
+    if (e.code == "Digit5") {
+        zoom = zoom_levels[4];
+    }
+    if (e.code == "Digit6") {
+        zoom = zoom_levels[5];
+    }
+    if (e.code == "Digit7") {
+        zoom = zoom_levels[6];
+    }
 }
 
 function keyUpHandler (e) {
@@ -323,6 +350,7 @@ function keyUpHandler (e) {
     }
     if (e.code == "KeyX") {
         shotPressed = false;
+        kickReset = false;
     }
 }
 
@@ -385,6 +413,34 @@ function distanceLinePoint(line, point) {
 
 function resolveDSCollision(disc, segment) {
     // TODO
+
+    if (segment.curve === 0) {
+        const [projOrthX, projOrthY] = getLinesIntersection([segment.v0[1] - segment.v1[1], segment.v1[0] - segment.v0[0], segment.v1[1] * segment.v0[0] - segment.v1[0] * segment.v0[1]], [segment.v0[0] - segment.v1[0], segment.v0[1] - segment.v1[1], (segment.v1[0] - segment.v0[0]) * disc.x + (segment.v1[1] - segment.v0[1]) * disc.y]);
+        var norm = {x : segment.v0[1] - segment.v1[1], y : segment.v1[0] - segment.v0[0]};
+        
+        if (checkPointInSegment(projOrthX, projOrthY, segment.v0, segment.v1)) {
+            const angle = -Math.atan2(disc.y - projOrthY, disc.x - projOrthX);
+
+            const u = rotate(disc.xspeed, disc.yspeed, angle);
+            const v = { x: -u[0] * segment.bCoef * disc.bCoef, y: u[1] };
+
+            const vFinal = rotate(v.x, v.y, -angle);
+
+            disc.xspeed = vFinal[0];
+            disc.yspeed = vFinal[1];
+            if (disc.invMass !== 0) {
+                disc.x = projOrthX + disc.radius / Math.sqrt(norm.x ** 2 + norm.y ** 2) * Math.sign(norm.x - projOrthX) * norm.x;
+                disc.y = projOrthY + disc.radius / Math.sqrt(norm.x ** 2 + norm.y ** 2) * Math.sign(norm.y - projOrthY) * norm.y;
+            }
+        }
+        else {
+            var ext = Math.min(dist(segment.v0, disc), dist(segment.v1, disc));
+            if (ext < disc.radius - Number.EPSILON * 1E3) {
+                var ok;
+            }
+        }
+    }
+
 }
 
 function resolveDPCollision (disc, plane) {
@@ -451,6 +507,28 @@ function resolveDDCollision (disc1, disc2) {
     }
 }
 
+function resolveDDKickCollision (discKicking, discKicked) {
+    // TODO: check if exact
+    // TODO: moving discs with invMass = 0 don't work properly
+
+    const angle = -Math.atan2(discKicked.y - discKicking.y, discKicked.x - discKicking.x);
+
+    const u1 = rotate(discKicking.xspeed, discKicking.yspeed, angle);
+    const u2 = rotate(discKicked.xspeed, discKicked.yspeed, angle);
+
+    var v1 = { x: u1[0], y: u1[1] };
+    var v2 = { x: u2[0] + discKicking.kickStrength * discKicked.invMass, y: u2[1] };
+
+    const vFinal1 = rotate(v1.x, v1.y, -angle);
+    const vFinal2 = rotate(v2.x, v2.y, -angle);
+
+    discKicking.xspeed = vFinal1[0];
+    discKicking.yspeed = vFinal1[1];
+
+    discKicked.xspeed = vFinal2[0];
+    discKicked.yspeed = vFinal2[1];
+}
+
 function drawMap () {
     resize_canvas();
 }
@@ -475,10 +553,23 @@ function draw () {
     }
 
     direction = normalise(direction);
-    playerPhysics.xspeed = (playerPhysics.xspeed + direction[0] * (shotPressed ? playerPhysics.kickingAcceleration : playerPhysics.acceleration));
-    playerPhysics.yspeed = (playerPhysics.yspeed + direction[1] * (shotPressed ? playerPhysics.kickingAcceleration : playerPhysics.acceleration));
+    playerPhysics.xspeed = (playerPhysics.xspeed + direction[0] * (checkKick() ? playerPhysics.kickingAcceleration : playerPhysics.acceleration));
+    playerPhysics.yspeed = (playerPhysics.yspeed + direction[1] * (checkKick() ? playerPhysics.kickingAcceleration : playerPhysics.acceleration));
 
     discs.forEach((d_a, i_a) => {
+        discs.filter((_, i) => i > i_a).forEach((d_b) => {
+            if (((d_a.cGroup & d_b.cMask) !== 0) && ((d_a.cMask & d_b.cGroup) !== 0)) {
+                if (dist([d_a.x, d_a.y], [d_b.x, d_b.y]) < d_a.radius + d_b.radius + 4) {
+                    if (checkKick() && d_b.kickStrength !== undefined && (d_a.cGroup & haxball.collisionFlags.kick) !== 0) {
+                        resolveDDKickCollision(d_b, d_a);
+                        kickReset = true;
+                    }
+                    else if (dist([d_a.x, d_a.y], [d_b.x, d_b.y]) < d_a.radius + d_b.radius) {
+                        resolveDDCollision(d_a, d_b);
+                    }
+                }
+            }
+        });
         planes.forEach((p) => {
             if (((d_a.cGroup & p.cMask) !== 0) && ((d_a.cMask & p.cGroup) !== 0)) {
                 const [projOrthX, projOrthY] = getLinesIntersection([p.normal[0], p.normal[1], -p.dist * (p.normal[0] ** 2 + p.normal[1] ** 2)], [-p.normal[1], p.normal[0], p.normal[1] * d_a.x - p.normal[0] * d_a.y]);
@@ -487,10 +578,19 @@ function draw () {
                 }
             }
         });
-        discs.filter((_, i) => i > i_a).forEach((d_b) => {
-            if (((d_a.cGroup & d_b.cMask) !== 0) && ((d_a.cMask & d_b.cGroup) !== 0)) {
-                if (dist([d_a.x, d_a.y], [d_b.x, d_b.y]) <= d_a.radius + d_b.radius) {
-                    resolveDDCollision(d_a, d_b);
+        segments.forEach((s) => {
+            if (((d_a.cGroup & s.cMask) !== 0) && ((d_a.cMask & s.cGroup) !== 0)) {
+                const [projOrthX, projOrthY] = getLinesIntersection([s.v0[1] - s.v1[1], s.v1[0] - s.v0[0], s.v1[1] * s.v0[0] - s.v1[0] * s.v0[1]], [s.v0[0] - s.v1[0], s.v0[1] - s.v1[1], (s.v1[0] - s.v0[0]) * d_a.x + (s.v1[1] - s.v0[1]) * d_a.y]);
+                if (checkPointInSegment(projOrthX, projOrthY, s.v0, s.v1)) {
+                    if (distanceLinePoint([s.v0[1] - s.v1[1], s.v1[0] - s.v0[0], s.v1[1] * s.v0[0] - s.v1[0] * s.v0[1]], [d_a.x, d_a.y]) < d_a.radius - Number.EPSILON * 1E3) {
+                        resolveDSCollision(d_a, s);
+                    }
+                }
+                else {
+                    var ext = Math.min(dist(s.v0, d_a), dist(s.v1, d_a));
+                    if (ext < d_a.radius - Number.EPSILON * 1E3) {
+                        resolveDSCollision(d_a, s);
+                    }
                 }
             }
         });
@@ -656,7 +756,7 @@ function render (st) {
             drawPlayerDiscExtLine(playerPhysics);
 
             // createNickCanvas();
-            // drawTextNickCanvas("dada");
+            // drawTextNickCanvas("Malinx");
             // insertNickCanvasGlobalCanvas(ctx, playerPhysics.x, playerPhysics.y + 50);
         }
     });
