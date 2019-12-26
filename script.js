@@ -1,8 +1,8 @@
-// TODO : Better frame animation system
+// TODO : Better frame animation system wrt time
+// TODO : Fix drawMap (takes a crazy amount of time)
 // TODO : Scores bar
-// TODO : Clean-up
 // TODO : Camera system
-// TODO : Ability to have multiple players
+// TODO : Clean-up
 // TODO : Menu
 // TODO : Recording system
 
@@ -22,6 +22,77 @@ var canvas_rect = [-150, -75, 150, 75];
 //===== Haxball Values
 
 if (1) {
+
+    function Player () { };
+    function Disc () { };
+
+    Disc.prototype = {
+        ballPhysics: function () {
+            this.radius = 10;
+            this.bCoef = 0.5;
+            this.invMass = 1;
+            this.damping = 0.99;
+            this.color = "FFFFFF";
+            this.x = 0;
+            this.y = 0;
+            this.xspeed = 0;
+            this.yspeed = 0;
+            this.cGroup = 193;
+            this.cMask = 63;
+        },
+        playerPhysics: function () {
+            this.radius = 15;
+            this.bCoef = 0.5;
+            this.invMass = 0.5;
+            this.damping = 0.96;
+            this.acceleration = 0.1;
+            this.kickingAcceleration = 0.07;
+            this.kickingDamping = 0.96;
+            this.kickStrength = 5;
+            this.color = "FFFFFF";
+            this.x = 0;
+            this.y = 0;
+            this.xspeed = 0;
+            this.yspeed = 0;
+            this.cGroup = 0;
+            this.cMask = 39;
+        }
+    }
+
+    Player.prototype = {
+        default: function () {
+            this.disc = null;
+            this.name = "Player";
+            this.team = haxball.Team.SPECTATORS;
+            this.avatar = '';
+            var a = window.document.createElement("canvas");
+            var b = window.document.createElement("canvas");
+            this.avatarContext = a.getContext("2d", null);
+            this.avatarPattern = getAvatarPattern(this.avatarContext, this.avatar, [getRGBA(haxball.Team.BLUE.color)]);
+            this.nicknameCanvasContext = drawTextNickCanvas(b.getContext("2d", null), name);
+            this.inputs = 0;
+            this.shooting = false;
+            this.shotReset = false;
+            this.controls = [["ArrowUp"], ["ArrowLeft"], ["ArrowDown"], ["ArrowRight"], ["KeyX"]];
+        },
+        init: function (name, avatar, team, controls) {
+            this.default();
+            if (name !== undefined) {
+                this.name = name;
+                var b = window.document.createElement("canvas");
+                this.nicknameCanvasContext = drawTextNickCanvas(b.getContext("2d", null), name);
+            }
+            if (team !== undefined) {
+                this.team = team;
+            }
+            if (avatar !== undefined) {
+                this.avatar = avatar;
+                this.avatarContext = createAvatarCanvas();
+                this.avatarPattern = getAvatarPattern(this.avatarContext, this.avatar, this.team === haxball.Team.BLUE ? [getDecimalFromRGB(haxball.Team.BLUE.color)] : [getDecimalFromRGB(haxball.Team.RED.color)]);
+            }
+            if (controls !== undefined) this.controls = controls;
+        }
+    }
     // values hardcoded in haxball
     var haxball = {
         hockey: {
@@ -33,8 +104,26 @@ if (1) {
             border_color: 'rgb(199,230,189)'
         },
         segment_color: 'rgb(0,0,0)',
-        red_color: 'rgb(229,110,86)',
-        blue_color: 'rgb(86,137,229)',
+        Team: {
+            RED: {
+                name: "t-red",
+                id: 1,
+                color: 'rgb(229, 110, 86)',
+                cGroup: 2
+            },
+            BLUE: {
+                name: "t-blue",
+                id: 2,
+                color: 'rgb(86,137,229)',
+                cGroup: 4
+            },
+            SPECTATORS: {
+                name: "t-spectators",
+                id: 0,
+                color: null,
+                cGroup: 0
+            },
+        },
         playerPhysics: {
             radius: 15,
             bCoef: 0.5,
@@ -46,7 +135,7 @@ if (1) {
             kickStrength: 5,
             pos: [0, 0],
             cMask: ["all"],
-            cGroup: ["red"]
+            cGroup: [""]
         },
         ballPhysics: {
             radius: 10,
@@ -129,12 +218,12 @@ if (1) {
     }
     discs.unshift(collisionTransformation(ballPhysics));
     
-    var playerPhysics = stadium_copy.playerPhysics || {};
-    for (const [key, value] of Object.entries(haxball.playerPhysics)) {
-        if (playerPhysics[key] === undefined) playerPhysics[key] = value;
-    }
-    playerPhysics.pos = [-stadium.spawnDistance, 0];
-    discs.push(collisionTransformation(playerPhysics));
+    // var playerPhysics = stadium_copy.playerPhysics || {};
+    // for (const [key, value] of Object.entries(haxball.playerPhysics)) {
+    //     if (playerPhysics[key] === undefined) playerPhysics[key] = value;
+    // }
+    // playerPhysics.pos = [-stadium.spawnDistance, 0];
+    // discs.push(collisionTransformation(playerPhysics));
     
     var vertexes = stadium_copy.vertexes;
     vertexes.forEach((v) => {
@@ -176,36 +265,32 @@ if (1) {
         }
         p = collisionTransformation(p);
     });
+
+    stadium = JSON.parse(JSON.stringify(stadium_copy));
 }
 
-var frameRate = 60;
+var time = Date.now();
 
-var rightPressed = false;
-var leftPressed = false;
-var upPressed = false;
-var downPressed = false;
-var shotPressed = false;
-var kickReset = false;
+var gameState = 0;
 
 load_tile('grass');
 load_tile('hockey');
 
-discs[0].cGroup = 193;
-playerPhysics.cMask = 47;
-
 document.addEventListener("keydown", keyDownHandler, false);
 document.addEventListener("keyup", keyUpHandler, false);
 
-var nicknameCanvasCtx;
-var avatarCanvasCtx;
-var avatarPattern;
+var a = new Player;
+// var b = new Player;
+// var c = new Player;
+a.init("Gouiri", "10", haxball.Team.RED);
+// b.init("dada", "1", haxball.Team.BLUE, [[], [], [], [], []]);
+// c.init("lagg", "LOL", haxball.Team.BLUE, [[], [], [], [], []]);
+setPlayerDefaultProperties(a);
+// setPlayerDefaultProperties(b);
+// setPlayerDefaultProperties(c);
+var playersArray = [a];
 
-createAvatarCanvas();
-getAvatarPattern("10");
-
-function checkPointInSegment(x, y, v0, v1) {
-    return ((x - v0[0]) * (x - v1[0]) + (y - v0[1]) * (y - v1[1]) <= 0);
-}
+resetPositionDiscs();
 
 function createNickCanvas() { // canvas for nickname
     var a = window.document.createElement("canvas");
@@ -218,49 +303,58 @@ function createAvatarCanvas() { // canvas for avatar
     var a = window.document.createElement("canvas");
     a.width = 64;
     a.height = 64;
-    avatarCanvasCtx = a.getContext("2d", null);
-    avatarPattern = avatarCanvasCtx.createPattern(avatarCanvasCtx.canvas, "no-repeat");
+    return avatarCanvasCtx = a.getContext("2d", null);
+}
+
+function checkKick(player) {
+    if (player.shotReset) return !player.shooting;
+    return player.shooting;
 }
 
 function getRGBA(a) {
     return "rgba(" + [(a & 16711680) >>> 16, (a & 65280) >>> 8, a & 255].join() + ",255)"
 }
 
-function checkKick() {
-    if (kickReset) return !shotPressed;
-    return shotPressed;
+function getInputs(a, b, c, d, e) {
+    return a + b * 2 + c * 4 + d * 8 + e * 16;
 }
 
-function getAvatarPattern(avatar) { // get avatar pattern
-    var b = [15035990];
+function getDecimalFromRGB(a) {
+    var b = a.substring(4, a.length - 1).split(",");
+    return (parseInt(b[0]) << 16) + (parseInt(b[1]) << 8) + parseInt(b[2]);
+}
+
+function getAvatarPattern(ctx, avatar, colors) { // get avatar pattern
+    var b = colors;
     if (b.length > 0) {
-        avatarCanvasCtx.save();
-        avatarCanvasCtx.translate(32, 32);
-        avatarCanvasCtx.rotate(3.141592653589793 * 32 / 128);
+        ctx.save();
+        ctx.translate(32, 32);
+        ctx.rotate(3.141592653589793 * 32 / 128);
         for (var c = -32, d = 64 / b.length, e = 0; e < b.length; e++) {
-            avatarCanvasCtx.fillStyle = getRGBA(b[e]);
-            avatarCanvasCtx.fillRect(c, -32, d + 4, 64);
+            ctx.fillStyle = getRGBA(b[e]);
+            ctx.fillRect(c, -32, d + 4, 64);
             c += d;
         }
-        avatarCanvasCtx.restore();
-        avatarCanvasCtx.fillStyle = "white";
-        avatarCanvasCtx.textAlign = "center";
-        avatarCanvasCtx.textBaseline = "alphabetic";
-        avatarCanvasCtx.font = "900 34px 'Arial Black','Arial Bold',Gadget,sans-serif";
-        avatarCanvasCtx.fillText(avatar.substring(0, 2), 32, 44);
-        avatarPattern = avatarCanvasCtx.createPattern(avatarCanvasCtx.canvas, "no-repeat");
+        ctx.restore();
+        ctx.fillStyle = "white";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "alphabetic";
+        ctx.font = "900 34px 'Arial Black','Arial Bold',Gadget,sans-serif";
+        ctx.fillText(avatar.substring(0, 2), 32, 44);
+        var avatarPattern = ctx.createPattern(ctx.canvas, "no-repeat");
+        return avatarPattern;
     }
 }
 
 function drawPlayerDisc(player) { // draws (player) discs
     ctx.beginPath();
-    ctx.fillStyle = avatarPattern;
-    ctx.strokeStyle = checkKick() ? "white" : "black";
+    ctx.fillStyle = player.avatarPattern;
+    ctx.strokeStyle = checkKick(player) ? "white" : "black";
     ctx.beginPath();
-    ctx.arc(player.x, player.y, player.radius, 0, 2 * Math.PI, false);
+    ctx.arc(player.disc.x, player.disc.y, player.disc.radius, 0, 2 * Math.PI, false);
     ctx.save();
-    var c = player.radius / 32;
-    ctx.translate(player.x, player.y);
+    var c = player.disc.radius / 32;
+    ctx.translate(player.disc.x, player.disc.y);
     ctx.scale(c, c);
     ctx.translate(-32, -32);
     ctx.fill();
@@ -278,42 +372,100 @@ function drawPlayerDiscExtLine(player) {
     ctx.globalAlpha = 1;
 }
 
-function drawTextNickCanvas(nickname) { // draw text in nickname canvas
-    nicknameCanvasCtx.resetTransform();
-    nicknameCanvasCtx.clearRect(0, 0, 160, 34);
-    nicknameCanvasCtx.font = "26px sans-serif";
-    nicknameCanvasCtx.fillStyle = "white";
-    if (nicknameCanvasCtx.measureText(nickname).width > 160) {
-        nicknameCanvasCtx.textAlign = "left";
-        nicknameCanvasCtx.translate(2, 29);
+function drawTextNickCanvas(ctx, nickname) { // draw text in nickname canvas
+    ctx.resetTransform();
+    ctx.clearRect(0, 0, 160, 34);
+    ctx.font = "26px sans-serif";
+    ctx.fillStyle = "white";
+    if (ctx.measureText(nickname).width > 160) {
+        ctx.textAlign = "left";
+        ctx.translate(2, 29);
     }
     else {
-        nicknameCanvasCtx.textAlign = "center";
-        nicknameCanvasCtx.translate(80, 29);
+        ctx.textAlign = "center";
+        ctx.translate(80, 29);
     }
-    nicknameCanvasCtx.fillText(nickname, 0, 0)
+    ctx.fillText(nickname, 0, 0);
+    return ctx;
 }
 
-function insertNickCanvasGlobalCanvas(globalCtx, x, y) { // draw nickname canvas in global canvas
-    globalCtx.drawImage(nicknameCanvasCtx.canvas, 0, 0, 160, 34, x - 40, y - 34, 80, 17)
+function insertNickCanvasGlobalCanvas(globalCtx, nickCtx, x, y) { // draw nickname canvas in global canvas
+    globalCtx.drawImage(nickCtx.canvas, 0, 0, 160, 34, x - 40, y - 34, 80, 17)
+}
+
+function setDiscDefaultProperties (currentDisc, defaultDisc) {
+    currentDisc.x = defaultDisc.x;
+    currentDisc.y = defaultDisc.y;
+    currentDisc.xspeed = defaultDisc.xspeed;
+    currentDisc.yspeed = defaultDisc.yspeed;
+    currentDisc.radius = defaultDisc.radius;
+    currentDisc.bCoef = defaultDisc.bCoef;
+    currentDisc.invMass = defaultDisc.invMass;
+    currentDisc.damping = defaultDisc.damping;
+    currentDisc.cGroup = defaultDisc.cGroup;
+    currentDisc.cMask = defaultDisc.cMask;
+}
+
+function setPlayerDefaultProperties(player) {
+    if (player.team == haxball.Team.SPECTATORS) player.disc = null;
+    else {
+        player.inputs = 0;
+        var b = player.disc;
+        if (b == null) {
+            b = new Disc;
+            b.playerPhysics();
+            player.disc = b;
+            discs.push(b);
+        }
+        var c = collisionTransformation(haxball.playerPhysics);
+        b.radius = c.radius;
+        b.invMass = c.invMass;
+        b.damping = c.damping;
+        b.bCoef = c.bCoef;
+        b.cMask = 39 + (player.team == haxball.Team.RED ? haxball.collisionFlags.redKO : haxball.collisionFlags.blueKO);
+        b.cGroup = player.team.cGroup | c.cGroup;
+        b.x = (2 * player.team.id - 3) * stadium.width;
+        b.y = 0;
+        b.xspeed = 0;
+        b.yspeed = 0;
+    }
+}
+
+function resetPositionDiscs() {
+    var a = playersArray;
+    gameState = 0;
+    for (var b = stadium.discs, c = discs, d = 0, e = 1; d < e; d++) { // TODO : full kickoffReset
+        setDiscDefaultProperties(c[d], b[d]);
+    }
+    b = [0, 0, 0];
+    for (c = 0; c < a.length; c++) {
+        d = a[c];
+        setPlayerDefaultProperties(d);
+        e = d.team;
+        if (e !== haxball.Team.SPECTATORS) {
+            var f = d.disc,
+                g = stadium,
+                l = b[e.id];
+            // TODO : teamSpawnPoints
+            k = l + 1 >> 1;
+            if ((l % 1) == 1) k = -k;
+            g = stadium.spawnDistance * (2 * e.id - 3); // +- spawnDistance
+            l = 55 * k;
+            f.x = g;
+            f.y = l;
+            b[e.id]++;
+        }
+    }
 }
 
 function keyDownHandler (e) {
-    if (e.code == "ArrowRight") {
-        rightPressed = true;
-    }
-    if (e.code == "ArrowLeft") {
-        leftPressed = true;
-    }
-    if (e.code == "ArrowUp") {
-        upPressed = true;
-    }
-    if (e.code == "ArrowDown") {
-        downPressed = true;
-    }
-    if (e.code == "KeyX") {
-        shotPressed = true;
-    }
+    playersArray.forEach((p) => {
+        p.controls.forEach((c, i) => {
+            if (c.find(x => x == e.code)) {
+                if ((p.inputs & (2 ** i)) == 0) p.inputs += 2 ** i;
+            }
+        });
+    });
     if (e.code == "Digit1") {
         zoom = zoom_levels[0];
     }
@@ -338,37 +490,33 @@ function keyDownHandler (e) {
 }
 
 function keyUpHandler (e) {
-    if (e.code == "ArrowRight") {
-        rightPressed = false;
-    }
-    if (e.code == "ArrowLeft") {
-        leftPressed = false;
-    }
-    if (e.code == "ArrowUp") {
-        upPressed = false;
-    }
-    if (e.code == "ArrowDown") {
-        downPressed = false;
-    }
-    if (e.code == "KeyX") {
-        shotPressed = false;
-        kickReset = false;
-    }
+    playersArray.forEach((p) => {
+        p.controls.forEach((c, i) => {
+            if (c.find(x => x == e.code)) {
+                if ((p.inputs & (2 ** i)) != 0) p.inputs -= 2 ** i;
+            }
+        });
+    });
 }
 
 function collisionTransformation (physics, vertexes = null) {
     var cMask = physics.cMask;
     var y = 0;
-    cMask.forEach((x) => {
-        y |= haxball.collisionFlags[x];
-    });
+    if (typeof cMask === "object") {
+        cMask.forEach((x) => {
+            y |= haxball.collisionFlags[x];
+        });
+    }
     physics.cMask = y;
     var cGroup = physics.cGroup;
     y = 0;
-    cGroup.forEach((x) => {
-        y |= haxball.collisionFlags[x];
-    });
+    if (typeof cGroup === "object") {
+        cGroup.forEach((x) => {
+            y |= haxball.collisionFlags[x];
+        });
+    }
     physics.cGroup = y;
+    if (y == 1) physics.cGroup = 193;
     // physics["color"] = parseInt(physics["color"], 16);
     if (physics.pos !== undefined) {
         physics.x = physics.pos[0];
@@ -386,8 +534,10 @@ function collisionTransformation (physics, vertexes = null) {
 }
 
 function getCurveFSegment(segment) {
-    segment.curve *= .017453292519943295;
-    if (segment.curve < 0) {
+    var a = segment.curve;
+    a *= .017453292519943295;
+    if (a < 0) {
+        a *= -1;
         segment.curve *= -1;
         var b = segment.v0;
         segment.v0 = segment.v1;
@@ -395,9 +545,8 @@ function getCurveFSegment(segment) {
     }
     var liminf = 0.17435839227423353;
     var limsup = 5.934119456780721;
-    if (segment.curve > liminf && segment.curve < limsup) {
-        segment.curveF = 1 / Math.tan(segment.curve / 2);
-        delete segment.curve;
+    if (a > liminf && a < limsup) {
+        segment.curveF = 1 / Math.tan(a / 2);
     }
 }
 
@@ -449,17 +598,25 @@ function load_tile (name) {
 }
 
 function resolvePlayerMovement(player) {
-    if (checkKick()) {
+    var playerDisc = player.disc;
+    if ((player.inputs & 16) != 0) {
+        player.shooting = true;
+    }
+    else {
+        player.shooting = false;
+        player.shotReset = false;
+    }
+    if (checkKick(player)) {
         let g = false;
         discs.forEach((d) => {
-            if ((d.cGroup & haxball.collisionFlags.kick) !== 0 && d != player) {
+            if ((d.cGroup & haxball.collisionFlags.kick) !== 0 && d != playerDisc) {
                 var t = { x: d.x, y: d.y },
-                    h = { x: player.x, y: player.y }, // (joueur)
+                    h = { x: playerDisc.x, y: playerDisc.y },
                     e = haxball.playerPhysics,
                     m = t.x - h.x,
                     t = t.y - h.y,
                     h = Math.sqrt(m * m + t * t);
-                if (4 > h - player.radius - d.radius) { // dist inf a 4 + radA + radB
+                if (h - playerDisc.radius - d.radius < 4) {
                     var f = m / h,
                         m = t / h,
                         t = e.kickStrength;
@@ -473,21 +630,21 @@ function resolvePlayerMovement(player) {
             }
         });
         if (g) {
-            kickReset = true;
-            if (player.cMask !== 39) player.cMask = 39;
+            player.shotReset = true;;
+            if (playerDisc.cMask !== 39) playerDisc.cMask = 39;
             // TODO : play sound
         }
     }
     var direction = [0, 0];
-    if (rightPressed) direction[0]++;
-    if (leftPressed) direction[0]--;
-    if (downPressed) direction[1]++;
-    if (upPressed) direction[1]--;
+    if ((player.inputs & 1) != 0) direction[1]--;
+    if ((player.inputs & 2) != 0) direction[0]--;
+    if ((player.inputs & 4) != 0) direction[1]++;
+    if ((player.inputs & 8) != 0) direction[0]++;
 
     direction = normalise(direction);
 
-    player.xspeed = (player.xspeed + direction[0] * (checkKick() ? playerPhysics.kickingAcceleration : playerPhysics.acceleration));
-    player.yspeed = (player.yspeed + direction[1] * (checkKick() ? playerPhysics.kickingAcceleration : playerPhysics.acceleration));
+    playerDisc.xspeed = (playerDisc.xspeed + direction[0] * (checkKick(player) ? playerDisc.kickingAcceleration : playerDisc.acceleration));
+    playerDisc.yspeed = (playerDisc.yspeed + direction[1] * (checkKick(player) ? playerDisc.kickingAcceleration : playerDisc.acceleration));
 }
 
 function resolveDVCollision (disc, vertex) {
@@ -515,7 +672,7 @@ function resolveDVCollision (disc, vertex) {
 
 function resolveDSCollision (disc, segment) {
     var b, c, d;
-    if (segment.curveF === undefined) { // no curveF
+    if (segment.curveF === undefined) {
         b = { x: segment.v0[0], y: segment.v0[1] }; // v0
         var e = { x: segment.v1[0], y: segment.v1[1] }; // v1
         c = e.x - b.x; // distx v0v1
@@ -542,8 +699,7 @@ function resolveDSCollision (disc, segment) {
         if ((0 < d[0] * b + d[1] * c && 0 < e[0] * b + e[1] * c) == 0 >= segment.curveF)
             return;
         e = Math.sqrt(b * b + c * c);
-        if (e == 0)
-            return;
+        if (e == 0) return;
         d = e - segment.circleRadius;
         b /= e;
         c /= e
@@ -594,7 +750,9 @@ function resolveDDCollision (disc1, disc2) {
         e = disc1.radius + disc2.radius, // radius sum
         f = d * d + b * b;
     if (f > 0 && f <= e * e) {
-        if ((disc1.cGroup & 1) !== 0 || (disc2.cGroup & 1) !== 0 && playerPhysics.cMask !== 39) playerPhysics.cMask = 39;
+        if ((disc1.cGroup & 1) !== 0 || (disc2.cGroup & 1) !== 0 && playersArray[0].disc.cMask !== 39) {
+            playersArray.forEach((p) => p.disc.cMask = 39);
+        }
         var f = Math.sqrt(f),
             d = d / f,
             b = b / f,
@@ -629,8 +787,10 @@ function drawMap () {
 
 function draw () {
     ctx.clearRect(-canvas.width / 2, -canvas.height / 2, canvas.width, canvas.height);
-    
-    resolvePlayerMovement(playerPhysics);
+
+    playersArray.forEach((p) => {
+        resolvePlayerMovement(p);
+    });
 
     discs.forEach((d) => {
         d.x += d.xspeed;
@@ -664,11 +824,12 @@ function draw () {
         }
     });
 
-    drawMap();
+    drawMap(); // TAKES SO MUCH TIME ???????? remove jquery from code ?
+    window.requestAnimationFrame(draw);
 }
 
-function segment_arc (st, segment) {
-    var seg = segment_points(st, segment);
+function segment_arc (segment) {
+    var seg = segment_points(segment);
     var arc = data(segment, 'arc');
     if (arc && arc.a[0] == seg.a[0] && arc.a[1] == seg.a[1] &&
         arc.b[0] == seg.b[0] && arc.b[1] == seg.b[1] && arc.curve == segment.curve) {
@@ -738,12 +899,12 @@ function Shape (type, object, i) {
     return { type: type, object: object, index: i };
 }
 
-function segment_points (st, segment) {
-    var a = st.vertexes[segment.v0];
-    var b = st.vertexes[segment.v1];
+function segment_points (segment) {
+    var a = segment.v0;
+    var b = segment.v1;
     return {
-        a: [a.x, a.y],
-        b: [b.x, b.y]
+        a: [a[0], a[1]],
+        b: [b[0], b[1]]
     };
 }
 
@@ -796,14 +957,15 @@ function render (st) {
     ctx.scale(window.devicePixelRatio * zoom, window.devicePixelRatio * zoom);
 
     renderbg(st, ctx);
+    drawPlayerDiscExtLine(playersArray[0].disc);
 
     $.each(st.segments, function (i, segment) {
         segment = complete(st, segment);
-        render_segment_arc(ctx, segment, segment_arc(st, segment));
+        render_segment_arc(ctx, segment, segment_arc(segment));
     });
 
     $.each(discs, function (i, disc) {
-        if (i !== discs.length - 1) {
+        if (i < discs.length - playersArray.length) {
             ctx.beginPath();
             var radius = disc.radius;
             ctx.arc(disc.x, disc.y, radius, 0, Math.PI * 2, true);
@@ -813,15 +975,11 @@ function render (st) {
             ctx.fill();
             ctx.stroke();
         }
-        else {
+    });
 
-            drawPlayerDisc(playerPhysics);
-            drawPlayerDiscExtLine(playerPhysics);
-
-            // createNickCanvas();
-            // drawTextNickCanvas("Malinx");
-            // insertNickCanvasGlobalCanvas(ctx, playerPhysics.x, playerPhysics.y + 50);
-        }
+    playersArray.forEach((p, i) => {
+        drawPlayerDisc(p);
+        if (i !== 0) insertNickCanvasGlobalCanvas(ctx, p.nicknameCanvasContext, p.disc.x, p.disc.y + 50);
     });
 
 }
@@ -954,4 +1112,4 @@ function resize_canvas () {
     render(stadium);
 }
 
-var interval = setInterval(draw, 1000 / frameRate);
+window.requestAnimationFrame(draw)
