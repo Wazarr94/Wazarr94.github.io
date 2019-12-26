@@ -1026,7 +1026,7 @@
         a.width = 64;
         a.height = 64;
         this.qb = a.getContext("2d", null);
-        this.Ej = this.qb.createPattern(this.qb.canvas, "no-repeat");
+        this.Ej = this.qb.createPattern(this.qb.canvas, "no-repeat"); // avatar pattern
         this.Yn() // canvas for nickname
     }
     function Tb () {
@@ -1071,7 +1071,7 @@
         this.m = 1;
         this.a = new H(0, 0)
     }
-    function E () {
+    function E () { // segment
         this.Fg = this.Gg = this.wa = null;
         this.Uj = 0;
         this.aa = this.W = this.Vd = null;
@@ -1101,7 +1101,7 @@
         this.Gb = this.ec = 100;
         this.Wd = this.Xd = 0
     }
-    function da () {
+    function da () { // disc
         this.hc = -1;
         this.gc = null;
         this.fl = 0;
@@ -1187,7 +1187,7 @@
     function ta () {
         this.ba = 0
     }
-    function fa () {
+    function fa () { // player
         this.zc = -1;
         this.Sm = null;
         this.ca = q.Ia;
@@ -1253,7 +1253,7 @@
     function Bb (a) {
         this.pp = a
     }
-    function Eb () {
+    function Eb () { // playerPhysics
         this.Re = 0;
         this.Y = 15;
         this.v = 0;
@@ -1281,7 +1281,7 @@
         this.hb = 5;
         this.S = null
     }
-    function ua () {
+    function ua () { // ballPhysics
         this.h = this.v = 63;
         this.R = 16777215;
         this.Ca = .99;
@@ -4623,7 +4623,7 @@
             for (a = 0; a < b.length;)
                 this.ya.ra(b[a++])
         },
-        af: function () {
+        af: function () { // game animation frame update
             this.Ce = window.requestAnimationFrame(G(this, this.af));
             this.nb.C();
             this.ya.C();
@@ -4779,9 +4779,9 @@
             }
                 ;
             a.Ki = function (a) {
-                n.Ma.bd(n.Ma.Ao);
-                var b = c.j.Eb.Db.td;
-                b.Oa(a == q.da ? b.Aq : b.un)
+                n.Ma.bd(n.Ma.Ao); // audio source buffer
+                var b = c.j.Eb.Db.td; // canvas for score
+                b.Oa(a == q.da ? b.Aq : b.un) // added to an array
             }
                 ;
             a.Li = function (a) {
@@ -6039,34 +6039,34 @@
             else {
                 var b = this.Ka.Js;
                 null != b && b();
-                for (var b = this.Ka.I, c = 0; c < b.length;) {
+                for (var b = this.Ka.I, c = 0; c < b.length;) { // iteration players for kick & direction
                     var d = b[c];
                     ++c;
-                    if (null != d.H) {
-                        0 == (d.nb & 16) && (d.Wb = !1);
-                        var e = this.S.ee;
+                    if (null != d.H) { // if position not null
+                        0 == (d.nb & 16) && (d.Wb = !1); // set correct flag value for Wb ~= shotPressed
+                        var e = this.S.ee; // physiques joueur
                         0 < d.Qc && d.Qc--;
                         d.yc < this.Ka.ae && d.yc++;
                         if (d.Wb && 0 >= d.Qc && 0 <= d.yc) {
-                            for (var f = !1, g = 0, l = this.ta.F; g < l.length;) {
+                            for (var f = !1, g = 0, l = this.ta.F; g < l.length;) { // itération disques
                                 var k = l[g];
                                 ++g;
-                                if (0 != (k.v & 64) && k != d.H) {
-                                    var t = k.a
-                                        , h = d.H.a
+                                if (0 != (k.v & 64) && k != d.H) { // check if flag kick
+                                    var t = k.a // balle (kickable)
+                                        , h = d.H.a // (joueur)
                                         , m = t.x - h.x
                                         , t = t.y - h.y
                                         , h = Math.sqrt(m * m + t * t);
-                                    if (4 > h - k.Y - d.H.Y) {
+                                    if (4 > h - k.Y - d.H.Y) { // dist inf a 4 + radA + radB
                                         var f = m / h
                                             , m = t / h
-                                            , t = e.Qe
+                                            , t = e.Qe // kickStrength
                                             , n = h = k.D
-                                            , k = k.$;
-                                        h.x = n.x + f * t * k;
-                                        h.y = n.y + m * t * k;
+                                            , k = k.$; // invMass
+                                        h.x = n.x + f * t;
+                                        h.y = n.y + m * t;
                                         n = d.H;
-                                        k = -e.Re;
+                                        k = -e.Re; // kickback
                                         h = t = n.D;
                                         n = n.$;
                                         t.x = h.x + f * k * n;
@@ -6075,7 +6075,7 @@
                                     }
                                 }
                             }
-                            f && (null != this.Ka.hi && this.Ka.hi(d),
+                            f && (null != this.Ka.hi && this.Ka.hi(d), // SOUND !!!
                                 d.Wb = !1,
                                 d.Qc = this.Ka.yd,
                                 d.yc -= this.Ka.Xc)
@@ -6088,58 +6088,59 @@
                         0 != (f & 8) && ++g;
                         0 != g && 0 != l && (f = Math.sqrt(g * g + l * l),
                             g /= f,
-                            l /= f);
+                            l /= f); // direction
                         f = d.H.D;
-                        k = d.Wb ? e.Se : e.Be;
+                        k = d.Wb ? e.Se : e.Be; // shotPressed -> acceleration
                         f.x += g * k;
                         f.y += l * k;
-                        d.H.Ca = d.Wb ? e.Te : e.Ca
+                        d.H.Ca = d.Wb ? e.Te : e.Ca // shotPressed -> damping
                     }
                 }
                 c = 0;
-                d = this.ta.F;
+                d = this.ta.F; // discs
                 e = 0;
-                for (g = d.length; e < g;)
-                    f = e++ ,
-                        l = d[f],
-                        0 != (l.v & 128) && (O.$j[c] = f,
-                            f = O.Uk[c],
-                            l = l.a,
-                            f.x = l.x,
-                            f.y = l.y,
-                            ++c);
-                this.ta.C(a);
-                if (0 == this.Ab) {
-                    for (a = 0; a < b.length;)
+                for (g = d.length; e < g; e++) { // get all scorable discs
+                    l = d[e];
+                    if ((l.v & 128) != 0) {
+                        O.$j[c] = e;
+                        f = O.Uk[c];
+                        l = l.a;
+                        f.x = l.x;
+                        f.y = l.y;
+                        c++;
+                    }
+                }
+                this.ta.C(a); // update positions correctly
+                // under is endgame stuff. Ab = state controller ? YES
+                // note : we can't score if Ab == 0
+                if (0 == this.Ab) { // Ab = 0 : "kickOffReset"
+                    for (a = 0; a < b.length; a++)
                         c = b[a],
-                            ++a,
                             null != c.H && (c.H.h = 39 | this.Zd.Vo);
-                    b = this.ta.F[0].D;
-                    0 < b.x * b.x + b.y * b.y && (this.Ab = 1)
-                } else if (1 == this.Ab) {
+                    b = this.ta.F[0].D; // ball speed
+                    0 < b.x * b.x + b.y * b.y && (this.Ab = 1) // if it moves, Ab becomes 1
+                } else if (1 == this.Ab) { // Ab = 1 : "gameInGoing"
                     this.Hc += .016666666666666666;
-                    for (a = 0; a < b.length;)
+                    for (a = 0; a < b.length; a++)
                         d = b[a],
-                            ++a,
                             null != d.H && (d.H.h = 39);
                     d = q.Ia;
                     b = this.ta.F;
-                    for (a = 0; a < c && (d = a++ ,
-                        d = this.S.Dn(b[O.$j[d]].a, O.Uk[d]),
-                        d == q.Ia);)
-                        ;
+                    for (a = 0; a < c && d == q.Ia; a++) {
+                        d = this.S.Dn(b[O.$j[a]].a, O.Uk[a]);
+                    }
                     d != q.Ia ? (this.Ab = 2,
-                        this.vc = 150,
+                        this.vc = 150, // animation timeout ?
                         this.Zd = d,
-                        d == q.da ? this.Jb++ : this.Pb++ ,
+                        d == q.da ? this.Jb++ : this.Pb++ , // score update
                         null != this.Ka.Ki && this.Ka.Ki(d.ng),
                         null != this.Ka.Jl && this.Ka.Jl(d.Z)) : 0 < this.Da && this.Hc >= 60 * this.Da && this.Pb != this.Jb && (null != this.Ka.Mi && this.Ka.Mi(),
                             this.lm())
-                } else if (2 == this.Ab)
+                } else if (2 == this.Ab) // Ab = 2 : "goalScored"
                     this.vc-- ,
                         0 >= this.vc && (0 < this.hb && (this.Pb >= this.hb || this.Jb >= this.hb) || 0 < this.Da && this.Hc >= 60 * this.Da && this.Pb != this.Jb ? this.lm() : (this.Ck(),
                             null != this.Ka.cq && this.Ka.cq()));
-                else if (3 == this.Ab && (this.vc-- ,
+                else if (3 == this.Ab && (this.vc-- , // Ab = 3 : "gameEnding"
                     0 >= this.vc && (b = this.Ka,
                         null != b.K))) {
                     b.K = null;
@@ -6158,36 +6159,40 @@
             this.Ab = 3;
             null != this.Ka.Li && this.Ka.Li(this.Pb > this.Jb ? q.da : q.xa)
         },
-        Ck: function () {
-            var a = this.Ka.I;
-            this.Ab = 0;
-            for (var b = this.S.F, c = this.ta.F, d = 0, e = this.S.mf ? b.length : 1; d < e;) {
-                var f = d++;
-                b[f].xk(c[f])
+        Ck: function () { // reset Kickoff function
+            var a = this.Ka.I; // players
+            this.Ab = 0; // game state
+            for (var b = this.S.F, c = this.ta.F, d = 0, e = this.S.mf ? b.length : 1; d < e; d++) { // b stadium discs, c current discs, mf probably partialKickoffReset
+                b[d].xk(c[d]); // resets stadium discs properties
             }
             b = [0, 0, 0];
-            for (c = 0; c < a.length;)
-                if (d = a[c],
-                    ++c,
-                    this.yk(d),
-                    e = d.ca,
-                    e != q.Ia) {
-                    var f = d.H.a
-                        , g = this.S
-                        , l = b[e.Z]
-                        , k = e == q.da ? g.Dd : g.md;
-                    0 == k.length ? (k = l + 1 >> 1,
-                        0 == (l & 1) && (k = -k),
-                        g = g.kc * e.Ah,
-                        l = 55 * k) : (l >= k.length && (l = k.length - 1),
-                            l = k[l],
-                            g = l.x,
-                            l = l.y);
+            for (c = 0; c < a.length; c++) {
+                d = a[c]; // player
+                this.yk(d); // resets players discs properties
+                e = d.ca; // player team
+                if (e != q.Ia) {
+                    var f = d.H.a, // player position
+                        g = this.S, // stadium
+                        l = b[e.Z], // team number
+                        k = e == q.da ? g.Dd : g.md; // teamSpawnPoints
+                    if (k.length == 0) { // no teamSpawnPoints
+                        k = l + 1 >> 1;
+                        if ((l % 1) == 0) k = -k;
+                        g = g.kc * e.Ah;  // (+- spawnDistance)
+                        l = 55 * k;
+                    } 
+                    else {
+                        if (l >= k.length) l = k.length - 1;
+                        l = k[l];
+                        g = l.x;
+                        l = l.y;
+                    }
                     f.x = g;
                     f.y = l;
                     b[e.Z]++;
-                    d.Ib = b[e.Z]
+                    d.Ib = b[e.Z];
                 }
+            }
         },
         ea: function (a) {
             this.ta.ea(a);
@@ -7040,21 +7045,30 @@
             b.hash += b.hash << 15;
             return b.hash | 0
         },
-        Dn: function (a, b) {
-            for (var c = 0, d = this.tc; c < d.length;) {
+        Dn: function (a, b) { // a : current position of scorable disc, b : position just before
+            for (var c = 0, d = this.tc; c < d.length; c++) { // goals
                 var e = d[c];
-                ++c;
-                var f = e.W
-                    , g = e.aa
-                    , l = b.x - a.x
-                    , k = b.y - a.y;
-                0 < -(f.y - a.y) * l + (f.x - a.x) * k == 0 < -(g.y - a.y) * l + (g.x - a.x) * k ? f = !1 : (l = g.x - f.x,
-                    g = g.y - f.y,
-                    f = 0 < -(a.y - f.y) * l + (a.x - f.x) * g == 0 < -(b.y - f.y) * l + (b.x - f.x) * g ? !1 : !0);
+                var f = e.W,
+                    g = e.aa,
+                    l = b.x - a.x,
+                    k = b.y - a.y;
+                if ((-(f.y - a.y) * l + (f.x - a.x) * k) * (-(g.y - a.y) * l + (g.x - a.x) * k) > 0) {
+                    f = false;
+                }
+                else {
+                    l = g.x - f.x,
+                    g = g.y - f.y;
+                    if ((-(a.y - f.y) * l + (a.x - f.x) * g) * (-(b.y - f.y) * l + (b.x - f.x) * g) > 0) {
+                        f = false;
+                    }
+                    else {
+                        f = true;
+                    }
+                }
                 if (f)
-                    return e.oe
+                    return e.oe // team of the goal line
             }
-            return q.Ia
+            return q.Ia // spec
         },
         Zc: function (a, b, c, d, e, f, g, l) {
             null == l && (l = 0);
@@ -8471,62 +8485,65 @@
             this.h = a.M();
             this.v = a.M()
         },
-        In: function (a) {
-            var b = this.a
-                , c = a.a
-                , d = b.x - c.x
-                , b = b.y - c.y
-                , e = a.Y + this.Y
-                , f = d * d + b * b;
-            if (0 < f && f <= e * e) {
-                var f = Math.sqrt(f)
-                    , d = d / f
-                    , b = b / f
-                    , c = this.$ / (this.$ + a.$)
-                    , e = e - f
-                    , f = e * c
-                    , g = this.a
-                    , l = this.a;
+        In: function (a) { // DISC-DISC COLLISION FUNCTION
+            var b = this.a, // disc1 pos
+                c = a.a, // disc2 pos
+                d = b.x - c.x,
+                b = b.y - c.y,
+                e = a.Y + this.Y, // radius sum
+                f = d * d + b * b;
+            if (f > 0 && f <= e * e) {
+                var f = Math.sqrt(f),
+                    d = d / f,
+                    b = b / f,
+                    c = this.$ / (this.$ + a.$), // mass
+                    e = e - f,
+                    f = e * c,
+                    g = this.a,
+                    l = this.a;
                 g.x = l.x + d * f;
                 g.y = l.y + b * f;
                 l = g = a.a;
                 e -= f;
                 g.x = l.x - d * e;
                 g.y = l.y - b * e;
-                e = this.D;
+                e = this.D; // speed
                 f = a.D;
                 e = d * (e.x - f.x) + b * (e.y - f.y);
-                0 > e && (e *= this.m * a.m + 1,
-                    c *= e,
-                    g = f = this.D,
-                    f.x = g.x - d * c,
-                    f.y = g.y - b * c,
-                    a = f = a.D,
-                    c = e - c,
-                    f.x = a.x + d * c,
-                    f.y = a.y + b * c)
+                if (e < 0) {
+                    e *= this.m * a.m + 1;
+                    c *= e;
+                    g = f = this.D;
+                    f.x = g.x - d * c;
+                    f.y = g.y - b * c;
+                    a = f = a.D;
+                    c = e - c;
+                    f.x = a.x + d * c;
+                    f.y = a.y + b * c;
+                }
             }
         },
-        Jn: function (a) {
+        Jn: function (a) { // DISC-SEGMENT COLLISION FUNCTION
             var b, c, d;
-            if (0 != 0 * a.ub) {
-                b = a.W.a;
-                var e = a.aa.a;
-                c = e.x - b.x;
-                var f = e.y - b.y
-                    , g = this.a;
-                d = g.x - e.x;
-                e = g.y - e.y;
+            if (0 != 0 * a.ub) { // no curve
+                b = a.W.a; // v0
+                var e = a.aa.a; // v1
+                c = e.x - b.x; // distx v0v1
+                var f = e.y - b.y // disty v0v1
+                    , g = this.a; // disc
+                d = g.x - e.x; // distx v1disc
+                e = g.y - e.y; // disty v1disc
                 g = this.a;
-                if (0 >= (g.x - b.x) * c + (g.y - b.y) * f || 0 <= d * c + e * f)
+                if (0 >= (g.x - b.x) * c + (g.y - b.y) * f || 0 <= d * c + e * f) // condition meaning too far away
                     return;
-                c = a.wa;
-                b = c.x;
-                c = c.y;
+                c = a.wa; // normal
+                b = c.x; // normx
+                c = c.y; // normy
                 d = b * d + c * e
-            } else {
-                c = a.Vd;
-                d = this.a;
+            }
+            else {
+                c = a.Vd; // center of the circle 
+                d = this.a; // disc
                 b = d.x - c.x;
                 c = d.y - c.y;
                 d = a.Fg;
@@ -8540,7 +8557,7 @@
                 b /= e;
                 c /= e
             }
-            e = a.Cc;
+            e = a.Cc; // bias ?
             if (0 == e)
                 0 > d && (d = -d,
                     b = -b,
@@ -8551,16 +8568,20 @@
                 c = -c),
                 d < -e)
                 return;
-            d >= this.Y || (d = this.Y - d,
-                f = e = this.a,
-                e.x = f.x + b * d,
-                e.y = f.y + c * d,
-                d = this.D,
-                d = b * d.x + c * d.y,
-                0 > d && (d *= this.m * a.m + 1,
-                    e = a = this.D,
-                    a.x = e.x - b * d,
-                    a.y = e.y - c * d))
+            if (d < this.Y) {
+                d = this.Y - d;
+                f = e = this.a;
+                e.x = f.x + b * d;
+                e.y = f.y + c * d;
+                d = this.D;
+                d = b * d.x + c * d.y;
+                if (d < 0) {
+                    d *= this.m * a.m + 1;
+                    e = a = this.D;
+                    a.x = e.x - b * d;
+                    a.y = e.y - c * d;
+                }
+            }
         },
         sc: function () {
             var a = ya.zc
@@ -8696,39 +8717,36 @@
                 this.F.push(d)
             }
         },
-        C: function (a) {
-            for (var b = 0, c = this.F; b < c.length;) {
+        C: function (a) { // Global disc physics collision function
+            for (var b = 0, c = this.F; b < c.length; b++) { // iterates over ALL discs
                 var d = c[b];
-                ++b;
-                var e = d.a
-                    , f = d.a
-                    , g = d.D;
-                e.x = f.x + g.x * a;
-                e.y = f.y + g.y * a;
-                f = e = d.D;
-                g = d.oa;
-                d = d.Ca;
-                e.x = (f.x + g.x) * d;
-                e.y = (f.y + g.y) * d
+                var e = d.a, // pos
+                    f = d.a, // pos
+                    g = d.D; // speed
+                e.x = f.x + g.x * a; // new pos x
+                e.y = f.y + g.y * a; // new pos x
+                f = e = d.D; // speed
+                g = d.oa; // gravity
+                d = d.Ca; // damping
+                e.x = (f.x + g.x) * d; // update speedx wrt gravityx
+                e.y = (f.y + g.y) * d // update speedy wrt gravityy
             }
-            a = 0;
-            for (b = this.F.length; a < b;) {
-                d = a++;
-                c = this.F[d];
-                d += 1;
-                for (e = this.F.length; d < e;)
-                    f = this.F[d++],
-                        0 != (f.h & c.v) && 0 != (f.v & c.h) && c.In(f);
-                if (0 != c.$) {
-                    d = 0;
-                    for (e = this.qa; d < e.length;)
-                        if (f = e[d],
-                            ++d,
-                            0 != (f.h & c.v) && 0 != (f.v & c.h)) {
-                            var g = f.wa,
-                                l = c.a,
-                                g = f.Ua - (g.x * l.x + g.y * l.y) + c.Y;
-                            if (0 < g) {
+            for (a = 0, b = this.F.length; a < b; a++) {
+                c = this.F[a];
+                for (d = a + 1, e = this.F.length; d < e; d++) {
+                    f = this.F[d];
+                    if ((f.h & c.v) != 0 && (f.v & c.h) != 0) {
+                        c.In(f); // disc-disc collision
+                    }
+                }
+                if (c.$ != 0) { // if finite mass
+                    for (d = 0, e = this.qa; d < e.length; d++) { // planes
+                        f = e[d];
+                        if ((f.h & c.v) != 0 && (f.v & c.h) != 0) {
+                            var g = f.wa, // normal
+                                l = c.a, // disc pos
+                                g = f.Ua - (g.x * l.x + g.y * l.y) + c.Y; // dist - () + radius
+                            if (g > 0) {
                                 var k = l = c.a,
                                     h = f.wa;
                                 l.x = k.x + h.x * g;
@@ -8736,51 +8754,54 @@
                                 g = c.D;
                                 l = f.wa;
                                 g = g.x * l.x + g.y * l.y;
-                                if (0 > g) {
-                                    g *= c.m * f.m + 1,
-                                        k = l = c.D,
-                                        f = f.wa,
-                                        l.x = k.x - f.x * g,
-                                        l.y = k.y - f.y * g
+                                if (g < 0) {
+                                    g *= c.m * f.m + 1;
+                                    k = l = c.D;
+                                    f = f.wa;
+                                    l.x = k.x - f.x * g;
+                                    l.y = k.y - f.y * g;
                                 }
                             }
                         }
-                    d = 0;
-                    for (e = this.U; d < e.length;)
-                        f = e[d],
-                            ++d,
-                            0 != (f.h & c.v) && 0 != (f.v & c.h) && c.Jn(f);
-                    d = 0;
-                    for (e = this.J; d < e.length;)
-                        if (f = e[d],
-                            ++d,
-                            0 != (f.h & c.v) && 0 != (f.v & c.h) && (l = c.a,
-                                k = f.a,
-                                g = l.x - k.x,
-                                l = l.y - k.y,
-                                k = g * g + l * l,
-                                0 < k && k <= c.Y * c.Y)) {
-                            var k = Math.sqrt(k)
-                                , g = g / k
-                                , l = l / k
-                                , k = c.Y - k
-                                , m = h = c.a;
-                            h.x = m.x + g * k;
-                            h.y = m.y + l * k;
-                            k = c.D;
-                            k = g * k.x + l * k.y;
-                            0 > k && (k *= c.m * f.m + 1,
-                                h = f = c.D,
-                                f.x = h.x - g * k,
-                                f.y = h.y - l * k)
+                    }
+                    for (d = 0, e = this.U; d < e.length; d++) { // segments
+                        f = e[d];
+                        if ((f.h & c.v) != 0 && (f.v & c.h) != 0) {
+                            c.Jn(f);
                         }
+                    }
+                    for (d = 0, e = this.J; d < e.length; d++) { // vertexes
+                        f = e[d];
+                        if ((f.h & c.v) != 0 && (f.v & c.h) != 0) {
+                            l = c.a;
+                            k = f.a;
+                            g = l.x - k.x;
+                            l = l.y - k.y;
+                            k = g * g + l * l;
+                            if (k > 0 && k <= c.Y * c.Y) {
+                                var k = Math.sqrt(k),
+                                    g = g / k,
+                                    l = l / k,
+                                    k = c.Y - k,
+                                    m = h = c.a;
+                                h.x = m.x + g * k;
+                                h.y = m.y + l * k;
+                                k = c.D;
+                                k = g * k.x + l * k.y;
+                                if (k < 0) {
+                                    k *= c.m * f.m + 1;
+                                    h = f = c.D;
+                                    f.x = h.x - g * k;
+                                    f.y = h.y - l * k;
+                                }
+                            }
+                        }
+                    }
                 }
             }
-            for (a = 0; 2 > a;)
-                for (++a,
-                    b = 0,
-                    c = this.ob; b < c.length;)
-                    c[b++].C(this.F)
+            for (a = 0; a < 2; a++)
+                for (b = 0, c = this.ob; b < c.length; b++) // joints
+                    c[b].C(this.F)
         },
         sc: function () {
             var a = ya.zc
@@ -8846,7 +8867,7 @@
             this.h = a.M();
             this.v = a.M()
         },
-        Nc: function (a) {
+        Nc: function (a) { // GET CURVEF
             a *= .017453292519943295;
             if (0 > a) {
                 a = -a;
@@ -8855,13 +8876,15 @@
                 this.aa = b;
                 this.Cc = -this.Cc
             }
+            E.en = .17435839227423353;
+            E.dn = 5.934119456780721;
             a > E.en && a < E.dn && (this.ub = 1 / Math.tan(a / 2))
         },
         uo: function () {
             return 0 != 0 * this.ub ? 0 : 114.59155902616465 * Math.atan(1 / this.ub)
         },
-        fe: function () {
-            if (0 == 0 * this.ub) {
+        fe: function () { // construct segments
+            if (0 == 0 * this.ub) { // curveF
                 var a = this.aa.a
                     , b = this.W.a
                     , c = .5 * (a.x - b.x)
@@ -9214,7 +9237,7 @@
                     this.c.stroke())
             }
         },
-        Lq: function (a) {
+        Lq: function (a) { // draw segments
             if (a.Xa) {
                 this.c.beginPath();
                 this.c.strokeStyle = M.lc(a.R);
@@ -9318,9 +9341,9 @@
         lc: function (a) {
             return "rgba(" + [(a & 16711680) >>> 16, (a & 65280) >>> 8, a & 255].join() + ",255)"
         },
-        kp: function (a, b) {
-            var c = window.document.createElement("canvas")
-                , d = c.getContext("2d", null);
+        kp: function (a, b) { // create canvas score announcement
+            var c = window.document.createElement("canvas"),
+                d = c.getContext("2d", null);
             d.font = "900 70px Arial Black,Arial Bold,Gadget,sans-serif";
             c.width = Math.ceil(d.measureText(a).width) + 7;
             c.height = 90;
@@ -9344,12 +9367,12 @@
             this.Za = [];
             this.xc = 0
         },
-        C: function (a) {
+        C: function (a) { // size check ?
             0 < this.Za.length && (this.xc += a,
                 this.xc > this.Za[0].ro() && (this.xc = 0,
                     this.Za.shift()))
         },
-        Jc: function (a) {
+        Jc: function (a) { // canvas drawing
             0 < this.Za.length && this.Za[0].Jc(a, this.xc)
         },
         f: Tb
@@ -9424,7 +9447,7 @@
                         this.qb.fillRect(c, -32, d + 4, 64),
                         c += d;
                 this.qb.restore();
-                this.qb.fillStyle = "blue";
+                this.qb.fillStyle = "white";
                 this.qb.textAlign = "center";
                 this.qb.textBaseline = "alphabetic";
                 this.qb.font = "900 34px 'Arial Black','Arial Bold',Gadget,sans-serif";
