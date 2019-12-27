@@ -682,7 +682,7 @@ function resolveDSCollision (disc, segment) {
         d = g.x - e.x;
         e = g.y - e.y;
         g = { x: disc.x, y: disc.y };
-        if ((g.x - b.x) * c + (g.y - b.y) * f <= 0 || d * c + e * f <= 0) return;
+        if ((g.x - b.x) * c + (g.y - b.y) * f <= 0 || d * c + e * f >= 0) return;
         var norm = normalise([segment.v0[1] - segment.v1[1], segment.v1[0] - segment.v0[0]]);
         c = { x: -norm[0], y: -norm[1] };
         b = c.x;
