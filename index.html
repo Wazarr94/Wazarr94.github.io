@@ -6,6 +6,24 @@
         <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js" crossorigin="anonymous"></script>
     </head>
     <body>
+        <div class="bar-container">
+            <div class="bar">
+                <div class="scoreboard">
+                    <div class="teamicon red"></div>
+                    <div class="score" data-hook="red-score">0</div>
+                    <div>-</div>
+                    <div class="score" data-hook="blue-score">0</div>
+                    <div class="teamicon blue"></div>
+                </div>
+                <div class="game-timer-view">
+                    <span class="overtime">OVERTIME!</span>
+                    <span class="digit">0</span>
+                    <span class="digit">0</span>
+                    <span class="null">:</span>
+                    <span class="digit">0</span>
+                    <span class="digit">0</span></div>
+            </div>
+        </div>
         <canvas id="canvas_div"></canvas>
         <script src="script.js"></script>
     </body>
