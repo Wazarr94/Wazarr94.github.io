@@ -2,12 +2,13 @@
 // TODO : Sound
 // TODO : Goal announcements
 // TODO : Fix nickname issue
-// TODO : Camera system
 // TODO : Clean-up
 // TODO : Chat (for commands)
 // TODO : AI Players
 // TODO : Menu
 // TODO : Recording system
+
+// BUG : when goal, weird physics happening ?
 
 var canvas = document.getElementById("canvas_div");
 var ctx = canvas.getContext("2d", { alpha: true });
@@ -20,6 +21,8 @@ var margin = 0;
 var bg_patterns = {};
 
 // cached canvas size info
+
+var canvas_rect = [-150, -75, 150, 75];
 
 //===== Haxball Values
 
@@ -214,6 +217,8 @@ var stadiumP = JSON.parse(`{"name":"Classic","width":420,"height":200,"spawnDist
 var stadium2 = JSON.parse(`{"name":"Big","width":600,"height":270,"spawnDistance":350,"bg":{"type":"grass","width":550,"height":240,"kickOffRadius":80,"cornerRadius":0},"vertexes":[{"x":-550,"y":240,"trait":"ballArea"},{"x":-550,"y":80,"trait":"ballArea"},{"x":-550,"y":-80,"trait":"ballArea"},{"x":-550,"y":-240,"trait":"ballArea"},{"x":550,"y":240,"trait":"ballArea"},{"x":550,"y":80,"trait":"ballArea"},{"x":550,"y":-80,"trait":"ballArea"},{"x":550,"y":-240,"trait":"ballArea"},{"x":0,"y":270,"trait":"kickOffBarrier"},{"x":0,"y":80,"trait":"kickOffBarrier"},{"x":0,"y":-80,"trait":"kickOffBarrier"},{"x":0,"y":-270,"trait":"kickOffBarrier"},{"x":-560,"y":-80,"trait":"goalNet"},{"x":-580,"y":-60,"trait":"goalNet"},{"x":-580,"y":60,"trait":"goalNet"},{"x":-560,"y":80,"trait":"goalNet"},{"x":560,"y":-80,"trait":"goalNet"},{"x":580,"y":-60,"trait":"goalNet"},{"x":580,"y":60,"trait":"goalNet"},{"x":560,"y":80,"trait":"goalNet"}],"segments":[{"v0":0,"v1":1,"trait":"ballArea"},{"v0":2,"v1":3,"trait":"ballArea"},{"v0":4,"v1":5,"trait":"ballArea"},{"v0":6,"v1":7,"trait":"ballArea"},{"v0":12,"v1":13,"trait":"goalNet","curve":-90},{"v0":13,"v1":14,"trait":"goalNet"},{"v0":14,"v1":15,"trait":"goalNet","curve":-90},{"v0":16,"v1":17,"trait":"goalNet","curve":90},{"v0":17,"v1":18,"trait":"goalNet"},{"v0":18,"v1":19,"trait":"goalNet","curve":90},{"v0":8,"v1":9,"trait":"kickOffBarrier"},{"v0":9,"v1":10,"trait":"kickOffBarrier","curve":180,"cGroup":["blueKO"]},{"v0":9,"v1":10,"trait":"kickOffBarrier","curve":-180,"cGroup":["redKO"]},{"v0":10,"v1":11,"trait":"kickOffBarrier"}],"goals":[{"p0":[-550,80],"p1":[-550,-80],"team":"red"},{"p0":[550,80],"p1":[550,-80],"team":"blue"}],"discs":[{"pos":[-550,80],"trait":"goalPost","color":"FFCCCC"},{"pos":[-550,-80],"trait":"goalPost","color":"FFCCCC"},{"pos":[550,80],"trait":"goalPost","color":"CCCCFF"},{"pos":[550,-80],"trait":"goalPost","color":"CCCCFF"}],"planes":[{"normal":[0,1],"dist":-240,"trait":"ballArea"},{"normal":[0,-1],"dist":-240,"trait":"ballArea"},{"normal":[0,1],"dist":-270,"bCoef":0.1},{"normal":[0,-1],"dist":-270,"bCoef":0.1},{"normal":[1,0],"dist":-600,"bCoef":0.1},{"normal":[-1,0],"dist":-600,"bCoef":0.1}],"traits":{"ballArea":{"vis":false,"bCoef":1,"cMask":["ball"]},"goalPost":{"radius":8,"invMass":0,"bCoef":0.5, "color" : "000000"},"goalNet":{"vis":true,"bCoef":0.1,"cMask":["ball"]},"kickOffBarrier":{"vis":false,"bCoef":0.1,"cGroup":["redKO","blueKO"],"cMask":["red","blue"]}}}`);
 
 var stadium_copy = JSON.parse(JSON.stringify(stadium));
+var cameraFollowMode = 0;
+var cameraFollow = { "x": 0, "y": 0 };
 
 var discs = stadium_copy.discs;
 discs.forEach((d) => {
@@ -444,6 +449,46 @@ function setPlayerDefaultProperties(player) {
         b.xspeed = 0;
         b.yspeed = 0;
     }
+}
+
+function setCameraFollow(game, playerPos, widthCal, heightCal, refresh) {
+    var f, g;
+    if (playerPos != null && cameraFollowMode == 1) { // no camera follow
+        f = playerPos.x;
+        g = playerPos.y;
+    }
+    else {
+        f = discs[0].x;
+        g = discs[0].y;
+        if (playerPos != null) {
+            f = .5 * (f + playerPos.x); // center of ball-player x
+            g = .5 * (g + playerPos.y); // center of ball-player y
+            var midX = .5 * widthCal, // middle of screen x
+                midY = .5 * heightCal; // middle of screen y
+            var t = playerPos.x - midX + 50, // lim sup x
+                n = playerPos.y - midY + 50, // lim sup y
+                k = playerPos.x + midX - 50, // lim inf x
+                h = playerPos.y + midY - 50; // lim inf y
+            f = f > k ? k : f < t ? t : f;
+            g = g > h ? h : g < n ? n : g
+        }
+    }
+    n = 60 * refresh;
+    if (n > 1) n = 1;
+    n *= .04;
+    cameraFollow.x += (f - cameraFollow.x) * n;
+    cameraFollow.y += (g - cameraFollow.y) * n;
+    checkCameraLimits(widthCal, heightCal, stadium) // stay within stadium limits
+}
+
+function checkCameraLimits(widthCal, heightCal, stadium) {
+    if (widthCal > 2 * stadium.width) cameraFollow.x = 0;
+    else if (cameraFollow.x + .5 * widthCal > stadium.width) cameraFollow.x = stadium.width - .5 * widthCal;
+    else if (cameraFollow.x - .5 * widthCal < -stadium.width) cameraFollow.x = -stadium.width + .5 * widthCal;
+
+    if (heightCal > 2 * stadium.height) cameraFollow.y = 0;
+    else if (cameraFollow.y + .5 * heightCal > stadium.height) cameraFollow.y = stadium.height - .5 * heightCal;
+    else if (cameraFollow.y - .5 * heightCal < -stadium.height) cameraFollow.y = -stadium.height + .5 * heightCal;
 }
 
 function resetPositionDiscs() {
@@ -984,8 +1029,10 @@ function normalise (v) {
 function render (st) {
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.clearRect(0, 0, canvas_rect[2] - canvas_rect[0], canvas_rect[3] - canvas_rect[1]);
+    setCameraFollow(null, playersArray[0].disc, canvas.width / zoom, canvas.height / zoom, 1 / 60);
     ctx.translate(-canvas_rect[0], -canvas_rect[1]);
     ctx.scale(window.devicePixelRatio * zoom, window.devicePixelRatio * zoom);
+    ctx.translate(-cameraFollow.x, -cameraFollow.y);
 
     renderbg(st, ctx);
     drawPlayerDiscExtLine(playersArray[0].disc);
