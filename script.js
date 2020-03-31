@@ -311,7 +311,7 @@ document.addEventListener("keydown", keyDownHandler, false);
 document.addEventListener("keyup", keyUpHandler, false);
 
 var a = new Player;
-a.init("Gouiri", "10", haxball.Team.RED, [["Numpad5"], ["Numpad1"], ["Numpad2"], ["Numpad3"], ["KeyC"]]);
+a.init("Gouiri", "10", haxball.Team.RED);
 setPlayerDefaultProperties(a);
 var b = new Player;
 b.init("BOT", "1", haxball.Team.BLUE, [[], [], [], [], []], true);
