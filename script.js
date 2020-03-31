@@ -2,18 +2,19 @@
 // TODO : Sound
 // TODO : Goal announcements
 // TODO : Fix nickname issue
+// TODO : Camera system
 // TODO : Clean-up
 // TODO : Chat (for commands)
 // TODO : AI Players
 // TODO : Menu
 // TODO : Recording system
 
-// BUG : when goal, weird physics happening ?
 
 var canvas = document.getElementById("canvas_div");
 var ctx = canvas.getContext("2d", { alpha: true });
 
 var margin = 0;
+var reloadCheck = false;
 
 //==== Program State
 
@@ -70,6 +71,7 @@ Game.prototype = {
         this.timeout = 0;
         this.timeLimit = 3;
         this.scoreLimit = 3;
+        this.kickoffReset = 8;
         this.red = 0;
         this.blue = 0;
         this.time = 0;
@@ -93,8 +95,9 @@ Player.prototype = {
         this.shotReset = false;
         this.spawnPoint = 0;
         this.controls = [["ArrowUp"], ["ArrowLeft"], ["ArrowDown"], ["ArrowRight"], ["KeyX"]];
+        this.bot = false;
     },
-    init: function (name, avatar, team, controls) {
+    init: function (name, avatar, team, controls, bot = false) {
         this.default();
         if (name !== undefined) {
             this.name = name;
@@ -110,6 +113,7 @@ Player.prototype = {
             this.avatarPattern = getAvatarPattern(this.avatarContext, this.avatar, this.team === haxball.Team.BLUE ? [getDecimalFromRGB(haxball.Team.BLUE.color)] : [getDecimalFromRGB(haxball.Team.RED.color)]);
         }
         if (controls !== undefined) this.controls = controls;
+        if (bot !== undefined) this.bot = bot;
     }
 }
 // values hardcoded in haxball
@@ -307,9 +311,12 @@ document.addEventListener("keydown", keyDownHandler, false);
 document.addEventListener("keyup", keyUpHandler, false);
 
 var a = new Player;
-a.init("Gouiri", "10", haxball.Team.RED);
+a.init("Gouiri", "10", haxball.Team.RED, [["Numpad5"], ["Numpad1"], ["Numpad2"], ["Numpad3"], ["KeyC"]]);
 setPlayerDefaultProperties(a);
-var playersArray = [a];
+var b = new Player;
+b.init("BOT", "1", haxball.Team.BLUE, [[], [], [], [], []], true);
+setPlayerDefaultProperties(b);
+var playersArray = [a, b];
 
 resetPositionDiscs();
 
@@ -641,6 +648,18 @@ function load_tile (name) {
     tile.src = name + 'tile.png';
 }
 
+function resolveBotInputs(player) {
+    if (player.disc != null) {
+        var ball = discs[0];
+        var input = 0;
+        player.disc.x - ball.x > 0 ? input += 2 : input += 8;
+        player.disc.y - ball.y > 0 ? input += 1 : input += 4;
+        if (Math.round(game.time * 60) % 20 == 0) input += 16;
+        player.inputs = input;
+        return; 
+    }
+}
+
 function resolvePlayerMovement(player) {
     if (player.disc != null) {
         var playerDisc = player.disc;
@@ -694,154 +713,158 @@ function resolvePlayerMovement(player) {
 }
 
 function resolveDVCollision (disc, vertex) {
-    var l = { x: disc.x, y: disc.y };
-    var k = { x: vertex.x, y: vertex.y };
-    var g = l.x - k.x;
-    l = l.y - k.y;
-    k = g * g + l * l;
-    if (k > 0 && k <= disc.radius ** 2) {
-        k = Math.sqrt(k);
-        g = g / k;
-        l = l / k;
-        k = disc.radius - k;
-        disc.x = disc.x + g * k;
-        disc.y = disc.y + l * k;
-        k = { x: disc.xspeed, y: disc.yspeed };
-        k = g * k.x + l * k.y;
-        if (k < 0) {
-            k *= disc.bCoef * vertex.bCoef + 1;
-            disc.xspeed = disc.xspeed - g * k;
-            disc.yspeed = disc.yspeed - l * k;
+    var discPos = { x: disc.x, y: disc.y };
+    var vertexPos = { x: vertex.x, y: vertex.y };
+    var dist_x = discPos.x - vertexPos.x;
+    var dist_y = discPos.y - vertexPos.y;
+    var dist = dist_x * dist_x + dist_y * dist_y;
+    if (dist > 0 && dist <= disc.radius ** 2) {
+        dist = Math.sqrt(dist);
+        dist_x = dist_x / dist;
+        dist_y = dist_y / dist;
+        var lambda = disc.radius - dist;
+        disc.x = disc.x + dist_x * lambda;
+        disc.y = disc.y + dist_y * lambda;
+        var discSpeed = { x: disc.xspeed, y: disc.yspeed };
+        var speedCoef = dist_x * discSpeed.x + dist_y * discSpeed.y;
+        if (speedCoef < 0) {
+            speedCoef *= disc.bCoef * vertex.bCoef + 1;
+            disc.xspeed = disc.xspeed - dist_x * speedCoef;
+            disc.yspeed = disc.yspeed - dist_y * speedCoef;
         }
     }
 }
 
 function resolveDSCollision (disc, segment) {
-    var b, c, d;
+    var distance;
+    var coef_x;
+    var coef_y;
     if (segment.curveF === undefined) {
-        b = { x: segment.v0[0], y: segment.v0[1] };
-        var e = { x: segment.v1[0], y: segment.v1[1] };
-        c = e.x - b.x;
-        var f = e.y - b.y,
-            g = { x: disc.x, y: disc.y };
-        d = g.x - e.x;
-        e = g.y - e.y;
+        var v0Pos = { x: segment.v0[0], y: segment.v0[1] };
+        var v1Pos = { x: segment.v1[0], y: segment.v1[1] };
+        var seg_x = v1Pos.x - v0Pos.x;
+        var seg_y = v1Pos.y - v0Pos.y;
+        var discPos = { x: disc.x, y: disc.y };
+        var dist0_x = discPos.x - v0Pos.x;
+        var dist0_y = discPos.y - v0Pos.y;
+        var dist1_x = discPos.x - v1Pos.x;
+        var dist1_y = discPos.y - v1Pos.y;
         g = { x: disc.x, y: disc.y };
-        if ((g.x - b.x) * c + (g.y - b.y) * f <= 0 || d * c + e * f >= 0) return;
+        if (dist0_x * seg_x + dist0_y * seg_y <= 0 || dist1_x * seg_x + dist1_y * seg_y >= 0) return;
         var norm = normalise([segment.v0[1] - segment.v1[1], segment.v1[0] - segment.v0[0]]);
-        c = { x: -norm[0], y: -norm[1] };
-        b = c.x;
-        c = c.y;
-        d = b * d + c * e;
+        norm = { x: -norm[0], y: -norm[1] };
+        coef_x = norm.x;
+        coef_y = norm.y;
+        distance = coef_x * dist1_x + coef_y * dist1_y;
     }
     else {
-        c = segment.circleCenter;
-        d = { x: disc.x, y: disc.y };
-        b = d.x - c[0];
-        c = d.y - c[1];
-        d = segment.v1Tan;
-        e = segment.v0Tan;
-        if ((d[0] * b + d[1] * c && 0 < e[0] * b + e[1] * c) > 0 == segment.curveF <= 0) return;
-        e = Math.sqrt(b * b + c * c);
-        if (e == 0) return;
-        d = e - segment.circleRadius;
-        b /= e;
-        c /= e;
+        var circleC = segment.circleCenter;
+        var discPos = { x: disc.x, y: disc.y };
+        var dist_x = discPos.x - circleC[0];
+        var dist_y = discPos.y - circleC[1];
+        var tan1 = segment.v1Tan;
+        var tan0 = segment.v0Tan;
+        if ((tan1[0] * dist_x + tan1[1] * dist_y > 0 && tan0[0] * dist_x + tan0[1] * dist_y > 0) == (segment.curveF <= 0)) return;
+        var dist = Math.sqrt(dist_x * dist_x + dist_y * dist_y);
+        if (dist == 0) return;
+        distance = dist - segment.circleRadius;
+        coef_x = dist_x / dist;
+        coef_y = dist_y / dist;
     }
-    if (d < 0) {
-        d = -d;
-        b = -b;
-        c = -c;
+    if (distance < 0) {
+        distance = -distance;
+        coef_x = -coef_x;
+        coef_y = -coef_y;
     }
-    if (d < disc.radius) {
-        d = disc.radius - d;
-        disc.x = disc.x + b * d;
-        disc.y = disc.y + c * d;
-        d = { x: disc.xspeed, y: disc.yspeed };
-        d = b * d.x + c * d.y;
-        if (d < 0) {
-            d *= disc.bCoef * segment.bCoef + 1;
-            disc.xspeed = disc.xspeed - b * d;
-            disc.yspeed = disc.yspeed - c * d;
+    if (distance < disc.radius) {
+        distance = disc.radius - distance;
+        disc.x = disc.x + coef_x * distance;
+        disc.y = disc.y + coef_y * distance;
+        var discSpeed = { x: disc.xspeed, y: disc.yspeed };
+        var speedCoef = coef_x * discSpeed.x + coef_y * discSpeed.y;
+        if (speedCoef < 0) {
+            speedCoef *= disc.bCoef * segment.bCoef + 1;
+            disc.xspeed = disc.xspeed - coef_x * speedCoef;
+            disc.yspeed = disc.yspeed - coef_y * speedCoef;
         }
     }
 }
 
 function resolveDPCollision (disc, plane) {
     var norm = normalise(plane.normal);
-    var g = { x: norm[0], y: norm[1] },
-        l = { x: disc.x, y: disc.y },
-        g = plane.dist - (g.x * l.x + g.y * l.y) + disc.radius;
-    if (g > 0) {
-        disc.x = disc.x + norm[0] * g;
-        disc.y = disc.y + norm[1] * g;
-        g = { x: disc.xspeed, y: disc.yspeed };
-        l = { x: norm[0], y: norm[1] };
-        g = g.x * l.x + g.y * l.y;
-        if (g < 0) {
-            g *= disc.bCoef * plane.bCoef + 1;
-            disc.xspeed = disc.xspeed - norm[0] * g;
-            disc.yspeed = disc.yspeed - norm[1] * g;
+    norm = { x: norm[0], y: norm[1] };
+    var discPos = { x: disc.x, y: disc.y };
+    var dist = plane.dist - (norm.x * discPos.x + norm.y * discPos.y) + disc.radius;
+    if (dist > 0) {
+        disc.x = disc.x + norm.x * dist;
+        disc.y = disc.y + norm.y * dist;
+        var discSpeed = { x: disc.xspeed, y: disc.yspeed };
+        var speedCoef = norm.x * discSpeed.x + norm.y * discSpeed.y;
+        if (speedCoef < 0) {
+            speedCoef *= disc.bCoef * plane.bCoef + 1;
+            disc.xspeed = disc.xspeed - norm.x * speedCoef;
+            disc.yspeed = disc.yspeed - norm.y * speedCoef;
         }
     }
 }
 
 function resolveDDCollision (disc1, disc2) {
-    var b = { x: disc1.x, y: disc1.y },
-        c = { x: disc2.x, y: disc2.y },
-        d = b.x - c.x,
-        b = b.y - c.y,
-        e = disc1.radius + disc2.radius,
-        f = d * d + b * b;
-    if (f > 0 && f <= e * e) {
-        var f = Math.sqrt(f),
-            d = d / f,
-            b = b / f,
-            c = disc1.invMass / (disc1.invMass + disc2.invMass),
-            e = e - f,
-            f = e * c;
-        disc1.x = disc1.x + d * f;
-        disc1.y = disc1.y + b * f;
-        e -= f;
-        disc2.x = disc2.x - d * e;
-        disc2.y = disc2.y - b * e;
-        e = { x: disc1.xspeed, y: disc1.yspeed }
-        f = { x: disc2.xspeed, y: disc2.yspeed }
-        e = d * (e.x - f.x) + b * (e.y - f.y);
-        if (e < 0) {
-            e *= disc1.bCoef * disc2.bCoef + 1;
-            c *= e;
-            disc1.xspeed = disc1.xspeed - d * c;
-            disc1.yspeed = disc1.yspeed - b * c;
-            c = e - c;
-            disc2.xspeed = disc2.xspeed + d * c;
-            disc2.yspeed = disc2.yspeed + b * c;
+    var disc1Pos = { x: disc1.x, y: disc1.y };
+    var disc2Pos = { x: disc2.x, y: disc2.y };
+    var dist_x = disc1Pos.x - disc2Pos.x;
+    var dist_y = disc1Pos.y - disc2Pos.y;
+    var sumRadius = disc1.radius + disc2.radius;
+    var dist = dist_x ** 2 + dist_y ** 2;
+    if (dist > 0 && dist <= sumRadius ** 2) {
+        dist = Math.sqrt(dist);
+        var coef_x = dist_x / dist;
+        var coef_y = dist_y / dist;
+        var massCoef = disc1.invMass / (disc1.invMass + disc2.invMass);
+        var distDiscs = sumRadius - dist;
+        var lambda = distDiscs * massCoef;
+        disc1.x = disc1.x + coef_x * lambda;
+        disc1.y = disc1.y + coef_y * lambda;
+        distDiscs -= lambda;
+        disc2.x = disc2.x - coef_x * distDiscs;
+        disc2.y = disc2.y - coef_y * distDiscs;
+        var disc1Speed = { x: disc1.xspeed, y: disc1.yspeed }
+        var disc2Speed = { x: disc2.xspeed, y: disc2.yspeed }
+        var speedCoef = coef_x * (disc1Speed.x - disc2Speed.x) + coef_y * (disc1Speed.y - disc2Speed.y);
+        if (speedCoef < 0) {
+            speedCoef *= disc1.bCoef * disc2.bCoef + 1;
+            massCoef *= speedCoef;
+            disc1.xspeed = disc1.xspeed - coef_x * massCoef;
+            disc1.yspeed = disc1.yspeed - coef_y * massCoef;
+            massCoef = speedCoef - massCoef;
+            disc2.xspeed = disc2.xspeed + coef_x * massCoef;
+            disc2.yspeed = disc2.yspeed + coef_y * massCoef;
         }
     }
 }
 
-function checkGoal (a, b) { // a : current position of scorable disc, b : position just before
-    for (var c = 0, d = stadium.goals; c < d.length; c++) {
-        var e = d[c];
-        var f = e.p0,
-            g = e.p1,
-            l = b[0] - a[0],
-            k = b[1] - a[1];
-        if ((-(f[1] - a[1]) * l + (f[0] - a[0]) * k) * (-(g[1] - a[1]) * l + (g[0] - a[0]) * k) > 0) {
-            f = false;
+function checkGoal (discPos, discPosPrev) { // discPos : current position of scorable disc, discPosPrev : position just before
+    for (var i = 0; i < stadium.goals.length; i++) {
+        var check;
+        var goal = stadium.goals[i];
+        var point0 = goal.p0;
+        var point1 = goal.p1;
+        var dist_x = discPosPrev[0] - discPos[0];
+        var dist_y = discPosPrev[1] - discPos[1];
+        if ((-(point0[1] - discPos[1]) * dist_x + (point0[0] - discPos[0]) * dist_y) * (-(point1[1] - discPos[1]) * dist_x + (point1[0] - discPos[0]) * dist_y) > 0) {
+            check = false;
         }
         else {
-            l = g[0] - f[0];
-            g = g[1] - f[1];
-            if ((-(a[1] - f[1]) * l + (a[0] - f[0]) * g) * (-(b[1] - f[1]) * l + (b[0] - f[0]) * g) > 0) {
-                f = false;
+            var goal_x = point1[0] - point0[0];
+            var goal_y = point1[1] - point0[1];
+            if ((-(discPos[1] - point0[1]) * goal_x + (discPos[0] - point0[0]) * goal_y) * (-(discPosPrev[1] - point0[1]) * goal_x + (discPosPrev[0] - point0[0]) * goal_y) > 0) {
+                check = false;
             }
             else {
-                f = true;
+                check = true;
             }
         }
-        if (f)
-            return e.team;
+        if (check)
+            return goal.team;
     }
     return haxball.Team.SPECTATORS;
 }
@@ -877,27 +900,24 @@ function updateBar() {
     }
 }
 
-function drawMap () {
-    resize_canvas();
-}
-
 function draw () {
     ctx.clearRect(-canvas.width / 2, -canvas.height / 2, canvas.width, canvas.height);
 
-    var b = discs;
-    var c = 0;
-    var d = discs;
-    var e = 0;
+    var scoreIndex = 0;
 
-    for (var g = d.length; e < g; e++) { // get all scorable discs
-        var l = d[e];
-        if ((l.cGroup & 128) != 0) {
-            scorableDiscsId[c] = e;
-            scorableDiscsPos[c][0] = l.x;
-            scorableDiscsPos[c][1] = l.y;
-            c++;
+    for (var i = 0; i < discs.length; i++) { // get all scorable discs
+        var disc = discs[i];
+        if ((disc.cGroup & 128) != 0) {
+            scorableDiscsId[scoreIndex] = i;
+            scorableDiscsPos[scoreIndex][0] = disc.x;
+            scorableDiscsPos[scoreIndex][1] = disc.y;
+            scoreIndex++;
         }
     }
+
+    playersArray.forEach((p) => {
+        if (p.bot) resolveBotInputs(p);
+    });
 
     playersArray.forEach((p) => {
         resolvePlayerMovement(p);
@@ -936,28 +956,30 @@ function draw () {
     });
 
     if (game.state == 0) { // "kickOffReset"
-        for (a = 0; a < b.length; a++) {
-            c = b[a];
-            if (c.x != null) c.cMask = 39 | 47;
+        for (var i = 0; i < discs.length; i++) {
+            var disc = discs[i];
+            if (disc.x != null) disc.cMask = 39 | game.kickoffReset; // ???
         }
-        b = b[0];
-        if (b.xspeed * b.xspeed + b.yspeed * b.yspeed > 0) game.state = 1;
+        var ball = discs[0];
+        if (ball.xspeed * ball.xspeed + ball.yspeed * ball.yspeed > 0) game.state = 1;
     }
     else if (game.state == 1) { // "gameInGoing"
         game.time += .016666666666666666;
-        for (a = 0; a < b.length; a++) {
-            d = b[a];
-            if (d.x != null) d.cMask = 39;
+        for (var i = 0; i < discs.length; i++) {
+            var disc = discs[i];
+            if (disc.x != null) disc.cMask = 39; // ???
         }
-        d = haxball.Team.SPECTATORS;
-        for (a = 0; a < c && d == haxball.Team.SPECTATORS; a++) {
-            d = checkGoal([b[scorableDiscsId[a]].x, b[scorableDiscsId[a]].y], scorableDiscsPos[a]);
+        var scoreTeam = haxball.Team.SPECTATORS;
+        for (var i = 0; i < scoreIndex; i++) {
+            scoreTeam = checkGoal([discs[scorableDiscsId[i]].x, discs[scorableDiscsId[i]].y], scorableDiscsPos[i]);
+            if (scoreTeam != haxball.Team.SPECTATORS) break;
         }
-        if (d != haxball.Team.SPECTATORS) {
+        if (scoreTeam != haxball.Team.SPECTATORS) {
             game.state = 2;
-            game.timeout = 150; // animation timeout ?
-            game.teamGoal = d;
-            d.name == haxball.Team.BLUE.name ? game.red++ : game.blue++; // score update
+            game.timeout = 150;
+            game.teamGoal = scoreTeam;
+            game.kickoffReset = scoreTeam.id * 8;
+            scoreTeam.name == haxball.Team.BLUE.name ? game.red++ : game.blue++;
         }
         else {
             if (game.timeLimit > 0 && game.time >= 60 * game.timeLimit && game.red != game.blue) {
@@ -977,20 +999,26 @@ function draw () {
         }
     }
     else if (game.state == 3) { // "gameEnding"
-        document.location.reload(true);
+        if (!reloadCheck) {
+            document.location.reload(true);
+            reloadCheck = true;
+            setTimeout(() => {
+                reloadCheck = false;
+            }, 1000);
+        }
         game.timeout--;
         if (game.timeout <= 0 && game.start) {
             game.start = false;
-            for (var a = 0, c = playersArray; a < c.length; a++) {
-                d = c[a];
-                d.disc = null;
-                d.spawnPoint = 0;
+            for (var i = 0; i < playersArray.length; i++) {
+                var player = playersArray[i];
+                player.disc = null;
+                player.spawnPoint = 0;
             }
         }
     }
 
     updateBar();
-    drawMap();
+    resize_canvas();
 
     window.requestAnimationFrame(draw);
 }
@@ -1073,7 +1101,7 @@ function render (st) {
 
     playersArray.forEach((p, i) => {
         drawPlayerDisc(p);
-        // if (i !== 0) insertNickCanvasGlobalCanvas(ctx, p.nicknameCanvasContext, p.disc.x, p.disc.y + 50);
+        if (i !== 0) insertNickCanvasGlobalCanvas(ctx, p.nicknameCanvasContext, p.disc.x, p.disc.y + 50);
     });
 
 }
