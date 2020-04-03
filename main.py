@@ -1,5 +1,5 @@
 import math
-import time
+import json
 
 class Disc:
     def __init__(self):  
