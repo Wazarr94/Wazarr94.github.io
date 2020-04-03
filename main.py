@@ -1,6 +1,5 @@
-
-import json
 import math
+import time
 
 class Disc:
     def __init__(self):  
@@ -42,7 +41,7 @@ class Game:
         self.teamGoal = haxball.Team["SPECTATORS"]
 
 class Player:    
-    def __init__(self, name = None, avatar = None, team = None, controls = None, bot = False): 
+    def __init__(self, name = None, avatar = None, team = None, controls = None, bot = None): 
         if(name != None):
              self.name = name
         else:
@@ -67,7 +66,6 @@ class Player:
             self.bot = bot
 
         self.disc = None
-        self.avatar = ''
         self.inputs = 0
         self.shooting = False
         self.shotReset = False
@@ -90,10 +88,10 @@ class Haxball:
                 "cGroup": 4
             },
             "SPECTATORS": {
-            "name": "t-spectators",
-            "id": 0,
-            "color": None,
-            "cGroup": 0
+                "name": "t-spectators",
+                "id": 0,
+                "color": None,
+                "cGroup": 0
             },
         }
         self.playerPhysics =  {
@@ -195,56 +193,44 @@ def setPlayerDefaultProperties(player):
         player.disc = None
     else:
         player.inputs = 0
-        b = player.disc
-        try:
-            if (b == None):
-                b = playerPhysics()
-                player.disc = b
-                discs.append(b)
-        except:
+        if (player.disc == None):
             b = playerPhysics()
             player.disc = b
             discs.append(b)
 
         c = collisionTransformation(haxball.playerPhysics)
-        b["radius"] = c["radius"]
-        b["invMass"] = c["invMass"]
-        b["damping"] = c["damping"]
-        b["bCoef"] = c["bCoef"]
-        if(player["team"] == haxball.Team["RED"]):
-            b["cMask"] = 39 + haxball.collisionFlags["redKO"]
+        player.disc.radius = c["radius"]
+        player.disc.invMass = c["invMass"]
+        player.disc.damping = c["damping"]
+        player.disc.bCoef = c["bCoef"]
+        if(player.team == haxball.Team["RED"]):
+            player.disc.cMask = 39 + haxball.collisionFlags["redKO"]
         else:
-            b["cMask"] = 39 + haxball.collisionFlags["blueKO"]
-        b["cGroup"] = player.team["cGroup"] | c["cGroup"]
-        b["x"] = (2 * player.team["id"] - 3) * stadium["width"]
-        b["y"] = 0
-        b["xspeed"] = 0
-        b["yspeed"] = 0
+            player.disc.cMask = 39 + haxball.collisionFlags["blueKO"]
+        player.disc.cGroup = player.team["cGroup"] | c["cGroup"]
+        player.disc.x = (2 * player.team["id"] - 3) * stadium["width"]
+        player.disc.y = 0
+        player.disc.xspeed = 0
+        player.disc.yspeed = 0
 
 def resetPositionDiscs():
-    a = playersArray
-    game["state"] = 0
-    b = stadium["discs"]
-    c = discs
-    for d in range(0,1): # Todo : full kickoffReset
-        setDiscDefaultProperties(c[d], b[d])
-    b = [0, 0, 0]
-    for c in range(0,len(a)):
-        d = a[c]
-        setPlayerDefaultProperties(d)
-        e = d["team"]
-        if (e != haxball["Team"]["SPECTATORS"]):
-            f = d["disc"]
-            g = stadium
-            l = b[e["id"]]
-            # Todo : teamSpawnPoints
-            k = l + 1 >> 1
-            if ((l % 1) == 1): k = -k
-            g = stadium["spawnDistance"] * (2 * e["id"] - 3); # +- spawnDistance
-            l = 55 * k
-            f["x"] = g
-            f["y"] = l
-            b[e["id"]] += 1
+    game.state = 0
+    setDiscDefaultProperties(discs[0], stadium['discs'][0])
+    teamArray = [0, 0, 0]
+    for i in range(0, len(playersArray)):
+        player = playersArray[i]
+        setPlayerDefaultProperties(player)
+        teamP = player.team
+        if (teamP != haxball.Team["SPECTATORS"]):
+            f = player.disc
+            valueArr = teamArray[teamP['id']]
+            fact = valueArr + 1 >> 1
+            if ((valueArr % 2) == 1): fact = -fact
+            pos_x = stadium['spawnDistance'] * (2 * teamP['id'] - 3)
+            pos_y = 55 * fact
+            f.x = pos_x
+            f.y = pos_y
+            teamArray[teamP['id']] += 1
 
 
 def collisionTransformation(physics, vertexes = None):
@@ -264,21 +250,20 @@ def collisionTransformation(physics, vertexes = None):
     physics["cGroup"] = y
     if (y == 1): physics["cGroup"] = 193
     print(physics)
-    if (physics["pos"] != None):
+    if (physics.get('pos') != None):
         physics["x"] = physics["pos"][0]
         physics["y"] = physics["pos"][1]
         physics["xspeed"] = 0
         physics["yspeed"] = 0
     
-    try:
-        if (physics["v0"] != None and vertexes != None):
-            physics["v0"] = [vertexes[physics["v0"]]["x"], vertexes[physics["v0"]]["y"]]
-            physics["v1"] = [vertexes[physics["v1"]]["x"], vertexes[physics["v1"]]["y"]]
-    except:
-        pass
+    if (physics.get('v0') != None and vertexes != None):
+        physics["v0"] = [vertexes[physics["v0"]]["x"], vertexes[physics["v0"]]["y"]]
+        physics["v1"] = [vertexes[physics["v1"]]["x"], vertexes[physics["v1"]]["y"]]
 
-    del physics["pos"]
-    del physics["trait"]
+    if (physics.get('pos') != None):
+        del physics["pos"]
+    if (physics.get('trait') != None):
+        del physics["trait"]
     return physics
 
 def getCurveFSegment(segment):
@@ -297,7 +282,7 @@ def getCurveFSegment(segment):
         segment["curveF"] = 1 / math.tan(a / 2)
 
 def getStuffSegment(segment):
-    if (segment["curveF"] != None): # curveF
+    if (segment.get('curveF') != None):  # curveF
         a = { "x": segment["v1"][0], "y": segment["v1"][1] }
         b = { "x": segment["v0"][0], "y": segment["v0"][1] }
         c = 0.5 * (a["x"] - b["x"])
@@ -331,7 +316,7 @@ def getStuffSegment(segment):
         segment["normal"] = [a / b, c / b]
 
 def resolveBotInputs(player):
-    if (player["disc"] != None):
+    if (player.disc != None):
         ball = discs[0]
         input = 0
         if(player["disc"]["x"] - ball["x"] > 0): input += 2 
@@ -344,7 +329,7 @@ def resolveBotInputs(player):
 
 
 def resolvePlayerMovement(player):
-    if (player["disc"] != None):
+    if (player.disc != None):
         playerDisc = player["disc"]
         if ((player["inputs"] & 16) != 0):
             player["shooting"] = True
@@ -419,7 +404,7 @@ def resolveDSCollision (disc, segment):
     distance = None
     coef_x = None
     coef_y = None
-    if (segment["curveF"] == None):
+    if (segment.get('curveF') != None):
         v0Pos = { "x": segment["v0"][0], "y": segment["v0"][1] }
         v1Pos = { "x": segment["v1"][0], "y": segment["v1"][1] }
         seg_x = v1Pos["x"] - v0Pos["x"]
@@ -546,65 +531,47 @@ def normalise (v):
     return [x, y]
 
 for d in discs:
-    if (d["trait"] != None):
+    if (d.get('trait') != None):
         for key, value in stadium["traits"][d["trait"]].items():
-            try : 
-                if (d[key] == None): d[key] = value
-            except:
+            if (d.get('key') == None):
                 d[key] = value
     for (key, value) in haxball.discPhysics.items():
-        try : 
-            if (d[key] == None): d[key] = value
-        except:
+        if (d.get('key') == None):
             d[key] = value
     d = collisionTransformation(d)
 
-
-
-try :
-    if(stadium_copy["ballPhysics"] == None ): ballPhysics = dict()
-    else: ballPhysics = stadium_copy["ballPhysics"]
-except: 
-    print("do")
+if (stadium_copy.get("ballPhysics") == None):
     ballPhysics = dict()
+else:
+    ballPhysics = stadium_copy["ballPhysics"]
+
 for key, value in haxball.ballPhysics.items():
-    print((ballPhysics))
-    try: 
-        if (ballPhysics[key] == None): ballPhysics[key] = value
-    except:
+    if (ballPhysics.get(key) == None):
         ballPhysics[key] = value
-discs.insert(0,(collisionTransformation(ballPhysics)))
+discs.insert(0, (collisionTransformation(ballPhysics)))
 
 vertexes = stadium_copy["vertexes"]
 for v in vertexes:
-    if (v["trait"] != None): 
+    if (v.get('trait') != None):
         for key, value in stadium["traits"][v["trait"]].items():
-            try:
-                if (v[key] == None): v[key] = value
-            except:
+            if (v.get('key') == None):
                 v[key] = value
 
-    for key, value in haxball.vertexPhysics.items(): 
-        try:
-            if (v[key] == None): v[key] = value
-        except:
+    for key, value in haxball.vertexPhysics.items():
+        if (v.get('key') == None):
             v[key] = value
     v = collisionTransformation(v)
 
 segments = stadium_copy["segments"]
 for s in segments:
-    if (s["trait"] != None):
+    if (s.get('trait') != None):
         for key, value in stadium["traits"][s["trait"]].items():
-            try: 
-                if (s[key] == None): s[key] = value
-            except:
+            if (s.get('key') == None):
                 s[key] = value
     
     for key, value in haxball.segmentPhysics.items():
-        try:
-            if (s[key] == None): s[key] = value
-        except:
-            s[key] = value
+            if (s.get('key') == None):
+                s[key] = value
     s = collisionTransformation(s, vertexes)
     getCurveFSegment(s)
     getStuffSegment(s)
@@ -612,16 +579,12 @@ for s in segments:
 planes = stadium_copy["planes"]
 for p in planes:
     for key, value in haxball.planePhysics.items():
-        try: 
-            if (p[key] == None): p[key] = value
-        except:
+        if (p.get('key') == None):
             p[key] = value
-    try: 
-        if (p["trait"] != None):
-            for key, value in stadium["traits"][p["trait"]].items():
+    if (p.get('trait') != None):
+        for key, value in stadium["traits"][p["trait"]].items():
+            if (p.get('key') == None):
                 p[key] = value
-    except:
-        pass
     p = collisionTransformation(p)
 
 goals = stadium_copy["goals"]
@@ -631,6 +594,8 @@ for g in goals:
     else:
         g["team"] = haxball.Team["BLUE"]
 
+
+stadium = stadium_copy.copy()
 game = Game()
 
 a = Player("Gouiri", "10", haxball.Team["RED"])
@@ -640,3 +605,5 @@ setPlayerDefaultProperties(b)
 playersArray = [a, b]
 
 resetPositionDiscs()
+
+print("test")
