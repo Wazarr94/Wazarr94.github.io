@@ -4,7 +4,7 @@
 // TODO : Clean-up
 // TODO : Chat (for commands)
 // TODO : Menu
-// TODO : Enhance Recording system
+// TODO : Recording system
 
 if (localStorage.getItem("rec") == null) localStorage.setItem("rec", "0");
 
@@ -339,6 +339,10 @@ if (!recCheck) {
 else {
     if (localStorage.getItem("rec") == "1") arrayRec = JSON.parse(localStorage.getItem("last"));
     else if (localStorage.getItem("rec") == "2") arrayRec = JSON.parse(localStorage.getItem("file"));
+    let spec = new Player;
+    spec.init("spec", "1", haxball.Team.SPECTATORS);
+    setPlayerDefaultProperties(spec);
+    playersArray.push(spec);
     for (let i = 0; i < arrayRec.length; i++) {
         let a = new Player;
         a.init(arrayRec[i][0][0], arrayRec[i][0][1], getTeamByID(arrayRec[i][0][2]), null, playInputs);
@@ -989,7 +993,7 @@ function draw () {
         }
     }
 
-    playersArray.forEach((p, i) => {
+    playersArray.filter(p => p.team.id !== 0).forEach((p, i) => {
         if (p.bot) p.bot(p, { "inputArray" : arrayRec[i][1] });
         resolvePlayerMovement(p);
         inputArrayCurr[i][1][currentFrame] = p.inputs;
