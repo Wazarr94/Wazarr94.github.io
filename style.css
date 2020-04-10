@@ -128,16 +128,29 @@ input {
     right: 0%;
     z-index: 1;
 }
-#load_last {
-  background-color: #4CAF50;
-  border: none;
-  color: white;
-  padding: 15px 25px;
-  text-align: center;
-  font-size: 16px;
+
+.upload-btn-wrapper {
+  position: absolute;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.btn {
+  border: 2px solid gray;
+  color: gray;
+  background-color: white;
+  padding: 8px 20px;
+  border-radius: 8px;
+  font-size: 20px;
+  font-weight: bold;
   cursor: pointer;
 }
 
-#load_last {
-  background-color: green;
+.upload-btn-wrapper input[type=file] {
+  font-size: 100px;
+  position: absolute;
+  left: 0;
+  top: 0;
+  opacity: 0;
+  cursor: pointer;
 }
