@@ -4,7 +4,7 @@
 // TODO : Clean-up
 // TODO : Chat (for commands)
 // TODO : Menu
-// TODO : Recording system
+// TODO : Enhance Recording system
 
 if (localStorage.getItem("rec") == null) localStorage.setItem("rec", "0");
 
@@ -223,7 +223,7 @@ var stadium2 = JSON.parse(`{"name":"Big","width":600,"height":270,"spawnDistance
 var stadium_copy = JSON.parse(JSON.stringify(stadium));
 var cameraFollowMode = 0;
 var cameraFollow = { "x": 0, "y": 0 };
-var currentFrame = 0;
+var currentFrame = -1;
 
 var discs = stadium_copy.discs;
 discs.forEach((d) => {
@@ -316,8 +316,14 @@ document.addEventListener("keyup", keyUpHandler, false);
 var myEl = document.getElementById('load_last');
 myEl.addEventListener('click', watchLastGame, false);
 
-var recCheck = (localStorage.getItem("rec") == "1" && localStorage.getItem("last") != null);
+var input = document.getElementById('input');
+input.addEventListener('change', handleFile, false);
+var fileread = new FileReader();
+fileread.addEventListener('loadend', loadFileRec, false);
+
+var recCheck = (localStorage.getItem("rec") !== "0" && localStorage.getItem("last") != null);
 var playersArray = [];
+var arrayRec;
 
 if (!recCheck) {
     var a = new Player;
@@ -328,12 +334,14 @@ if (!recCheck) {
     b.init("Bot", "1", haxball.Team.BLUE, [[], [], [], [], []], resolveBotInputs);
     setPlayerDefaultProperties(b);
     playersArray.push(b);
+    arrayRec = playersArray.map(p => [[p.name, p.avatar, p.team.id], []]);
 }
 else {
-    let lastArray = JSON.parse(localStorage.getItem("last"));
-    for (let i = 0; i < lastArray.length; i++) {
+    if (localStorage.getItem("rec") == "1") arrayRec = JSON.parse(localStorage.getItem("last"));
+    else if (localStorage.getItem("rec") == "2") arrayRec = JSON.parse(localStorage.getItem("file"));
+    for (let i = 0; i < arrayRec.length; i++) {
         let a = new Player;
-        a.init(lastArray[i][0][0], lastArray[i][0][1], getTeamByID(lastArray[i][0][2]), null, playInputs);
+        a.init(arrayRec[i][0][0], arrayRec[i][0][1], getTeamByID(arrayRec[i][0][2]), null, playInputs);
         setPlayerDefaultProperties(a);
         playersArray.push(a);
     }
@@ -342,7 +350,6 @@ else {
 localStorage.setItem("rec", "0");
 
 var inputArrayCurr = playersArray.map(p => [[p.name, p.avatar, p.team.id], []]);
-var inputArrayLast = JSON.parse(localStorage.getItem("last")) || playersArray.map(p => [[p.name, p.avatar, p.team], []]);
 
 resetPositionDiscs();
 
@@ -350,11 +357,53 @@ function getTeamByID (id) {
     return id == 0 ? haxball.Team.SPECTATORS : id == 1 ? haxball.Team.RED : haxball.Team.BLUE;
 }
 
-function watchLastGame() {
+function downloadFile (file, fileName) {
+    var c = window.document.createElement("a");
+    c.style.display = "display: none";
+    window.document.body.appendChild(c);
+    var d = URL.createObjectURL(file);
+    c.href = d;
+    c.download = fileName;
+    c.click();
+    URL.revokeObjectURL(d);
+    c.remove();
+}
+
+function downloadRec (rec, fileName) {
+    downloadFile(new Blob([rec], {
+        type: "octet/stream"
+    }), fileName);
+}
+
+function saveRecording (rec) {
+    var d = new Date;
+    downloadRec(rec, `HBReplay-${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}-${d.getHours()}h${d.getMinutes()}m.hbr`);
+}
+
+function watchLastGame () {
     if (localStorage.getItem("last") != null) {
         localStorage.setItem("rec", "1");
-        document.location.reload(true); 
+        document.location.reload(true);
     }
+}
+
+function handleFile () {
+    var file = input.files[0];
+    fileread.readAsBinaryString(file);
+}
+
+function loadFileRec () {
+    var string = fileread.result;
+    try {
+        var replay = JSON.parse(string);
+    }
+    catch (error) {
+        window.alert("Error loading the recording");
+        return;
+    }
+    localStorage.setItem("file", JSON.stringify(replay));
+    localStorage.setItem("rec", "2");
+    document.location.reload(true);
 }
 
 function createNickCanvas() { // canvas for nickname
@@ -941,7 +990,7 @@ function draw () {
     }
 
     playersArray.forEach((p, i) => {
-        if (p.bot) p.bot(p, { "inputArray" : inputArrayLast[i][1] });
+        if (p.bot) p.bot(p, { "inputArray" : arrayRec[i][1] });
         resolvePlayerMovement(p);
         inputArrayCurr[i][1][currentFrame] = p.inputs;
     });
@@ -1023,9 +1072,12 @@ function draw () {
     }
     else if (game.state == 3) { // "gameEnding"
         if (!reloadCheck) {
+            if (!recCheck) {
+                localStorage.setItem('last', JSON.stringify(inputArrayCurr));
+                saveRecording(JSON.stringify(inputArrayCurr));
+            }
             document.location.reload(true);
             reloadCheck = true;
-            localStorage.setItem('last', JSON.stringify(inputArrayCurr));
             setTimeout(() => {
                 reloadCheck = false;
             }, 1000);
