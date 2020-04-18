@@ -1,5 +1,9 @@
 import math
-import haxballPackage.classObject as objectsHaxball
+import copy
+import haxballPackage.classObject as objHax
+import haxballPackage.utilsHaxBall as utilsHax
+
+haxVal = utilsHax.haxballVal
 
 def checkKick(player):
     if (player.shotReset):
@@ -24,25 +28,25 @@ def setDiscDefaultProperties(currentDisc, defaultDisc):
     currentDisc.cMask = defaultDisc.cMask
 
 
-def setPlayerDefaultProperties(player, haxball, discs, stadium):
-    if (player.team == haxball.Team["SPECTATORS"]):
+def setPlayerDefaultProperties(player, stadium):
+    if (player.team == haxVal["Team"]["SPECTATORS"]):
         player.disc = None
     else:
         player.inputs = 0
         if (player.disc == None):
-            b = objectsHaxball.playerPhysics(haxball)
+            b = objHax.playerPhysics()
             player.disc = b
-            discs.append(b)
+            stadium['discs'].append(b)
 
-        c = collisionTransformation(objectsHaxball.Disc(haxball.playerPhysics), haxball)
+        c = collisionTransformation(objHax.Disc(haxVal['playerPhysics']))
         player.disc.radius = c.radius
         player.disc.invMass = c.invMass
         player.disc.damping = c.damping
         player.disc.bCoef = c.bCoef
-        if (player.team == haxball.Team["RED"]):
-            player.disc.cMask = 39 + haxball.collisionFlags["redKO"]
+        if (player.team == haxVal['Team']["RED"]):
+            player.disc.cMask = 39 + haxVal['collisionFlags']["redKO"]
         else:
-            player.disc.cMask = 39 + haxball.collisionFlags["blueKO"]
+            player.disc.cMask = 39 + haxVal['collisionFlags']["blueKO"]
         player.disc.cGroup = player.team["cGroup"] | c.cGroup
         player.disc.x = (2 * player.team["id"] - 3) * stadium["width"]
         player.disc.y = 0
@@ -50,38 +54,39 @@ def setPlayerDefaultProperties(player, haxball, discs, stadium):
         player.disc.yspeed = 0
 
 
-def resetPositionDiscs(haxball, discs, stadium, playersArray, game):
+def resetPositionDiscs(game):
     game.state = 0
-    setDiscDefaultProperties(discs[0], stadium['discs'][0])
+    setDiscDefaultProperties(game.stadiumUsed['discs'][0], game.stadiumStored['discs'][0])
     teamArray = [0, 0, 0]
-    for i in range(len(playersArray)):
-        player = playersArray[i]
-        setPlayerDefaultProperties(player, haxball, discs, stadium)
+    for i in range(len(game.players)):
+        player = game.players[i]
+        setPlayerDefaultProperties(player, game.stadiumUsed)
         teamP = player.team
-        if (teamP != haxball.Team["SPECTATORS"]):
+        if (teamP != haxVal['Team']["SPECTATORS"]):
             valueArr = teamArray[teamP['id']]
             fact = valueArr + 1 >> 1
             if ((valueArr % 2) == 1):
                 fact = -fact
-            pos_x = stadium['spawnDistance'] * (2 * teamP['id'] - 3)
+            pos_x = game.stadiumStored['spawnDistance'] * (2 * teamP['id'] - 3)
             pos_y = 55 * fact
             player.disc.x = pos_x
             player.disc.y = pos_y
             teamArray[teamP['id']] += 1
 
-def collisionTransformation(physics, haxball, vertexes=None):
+
+def collisionTransformation(physics, vertexes=None):
     cMask = physics.cMask
     y = 0
     if (type(cMask) is list):
         for x in cMask:
-            y |= haxball.collisionFlags[x]
+            y |= haxVal["collisionFlags"][x]
     physics.cMask = y
 
     cGroup = physics.cGroup
     y = 0
     if (type(cGroup) is list):
         for x in cGroup:
-            y |= haxball.collisionFlags[x]
+            y |= haxVal["collisionFlags"][x]
 
     physics.cGroup = y
 
@@ -131,7 +136,8 @@ def getStuffSegment(segment):
                                 segV0["y"] + dist_y + dist_x * segment.curveF]
         dist_x_CC = segV0["x"] - segment.circleCenter[0]
         dist_y_CC = segV0["y"] - segment.circleCenter[1]
-        segment.circleRadius = math.sqrt(dist_x_CC * dist_x_CC + dist_y_CC * dist_y_CC)
+        segment.circleRadius = math.sqrt(
+            dist_x_CC * dist_x_CC + dist_y_CC * dist_y_CC)
         segment.v0Tan = [-(segV0["y"] - segment.circleCenter[1]),
                          segV0["x"] - segment.circleCenter[0]]
         segment.v1Tan = [-(segment.circleCenter[1] - segV1["y"]),
@@ -150,19 +156,20 @@ def getStuffSegment(segment):
         setattr(segment, 'normal', [dist_y / dist, dist_x / dist])
         return segment
 
-def resolvePlayerMovement(player, Input, discs, haxball):
+
+def resolvePlayerMovement(player, discs):
     if (player.disc != None):
         playerDisc = player.disc
-        if ((player.inputs & Input["SHOOT"]) != 0):
+        if ((player.inputs & utilsHax.Input["SHOOT"]) != 0):
             player.shooting = True
         else:
             player.shooting = False
             player.shotReset = False
-        
+
         if (checkKick(player)):
             kickDone = False
             for d in discs:
-                if ((d.cGroup & haxball.collisionFlags["kick"]) != 0 and d != playerDisc):
+                if ((d.cGroup & haxVal['collisionFlags']["kick"]) != 0 and d != playerDisc):
                     discPos = {"x": d.x, "y": d.y}
                     playerDiscPos = {"x": playerDisc.x, "y": playerDisc.y}
                     dist_x = discPos["x"] - playerDiscPos["x"]
@@ -171,7 +178,7 @@ def resolvePlayerMovement(player, Input, discs, haxball):
                     if (dist - playerDisc.radius - d.radius < 4):
                         dist_x = dist_x / dist
                         dist_y = dist_y / dist
-                        kickS = haxball.playerPhysics["kickStrength"]
+                        kickS = haxVal['playerPhysics']["kickStrength"]
                         d.xspeed = d.xspeed + dist_x * kickS
                         d.yspeed = d.yspeed + dist_y * kickS
                         kickDone = True
@@ -182,13 +189,13 @@ def resolvePlayerMovement(player, Input, discs, haxball):
                     playerDisc.cMask = 39
 
         direction = [0, 0]
-        if ((player.inputs & Input["UP"]) != 0):
+        if ((player.inputs & utilsHax.Input["UP"]) != 0):
             direction[1] -= 1
-        if ((player.inputs & Input["LEFT"]) != 0):
+        if ((player.inputs & utilsHax.Input["LEFT"]) != 0):
             direction[0] -= 1
-        if ((player.inputs & Input["DOWN"]) != 0):
+        if ((player.inputs & utilsHax.Input["DOWN"]) != 0):
             direction[1] += 1
-        if ((player.inputs & Input["RIGHT"]) != 0):
+        if ((player.inputs & utilsHax.Input["RIGHT"]) != 0):
             direction[0] += 1
 
         direction = normalise(direction)
@@ -331,9 +338,9 @@ def resolveDDCollision(disc1, disc2):
             disc2.yspeed = disc2.yspeed + coef_y * massCoef
 
 
-def checkGoal(discPos, discPosPrev, stadium, haxball):
+def checkGoal(discPos, discPosPrev, stadium):
     for i in range(0, len(stadium["goals"])):
-        check = None
+        check = False
         goal = stadium["goals"][i]
         point0 = goal.p0
         point1 = goal.p1
@@ -350,45 +357,45 @@ def checkGoal(discPos, discPosPrev, stadium, haxball):
                 check = True
         if (check):
             return goal.team
-    return haxball.Team["SPECTATORS"]
+    return haxVal['Team']["SPECTATORS"]
 
 
-def resolveBotInputs1(player, discs, Input, args={}):
+def resolveBotInputs1(player, args={}):
     if (player.disc != None):
-        ball = discs[0]
+        ball = args['discs'][0]
         threshold = 2
         inputPlayer = 0
         if (player.disc.x - ball.x > threshold):
-            inputPlayer += Input["LEFT"]
+            inputPlayer += utilsHax.Input["LEFT"]
         if (player.disc.x - ball.x < -threshold):
-            inputPlayer += Input["RIGHT"]
+            inputPlayer += utilsHax.Input["RIGHT"]
         if (player.disc.y - ball.y > threshold):
-            inputPlayer += Input["UP"]
+            inputPlayer += utilsHax.Input["UP"]
         if (player.disc.y - ball.y < -threshold):
-            inputPlayer += Input["DOWN"]
+            inputPlayer += utilsHax.Input["DOWN"]
         if ((player.disc.x - ball.x) ** 2 + (player.disc.y - ball.y) ** 2 <= (ball.radius + player.disc.radius + 0.1) ** 2):
-            inputPlayer += Input["SHOOT"]
+            inputPlayer += utilsHax.Input["SHOOT"]
         player.inputs = inputPlayer
         return
 
 
-def resolveBotInputs2(player, discs, Input, currentFrame, args={}):
+def resolveBotInputs2(player, args={}):
     if (player.disc != None):
-        ball = discs[0]
+        ball = args['discs'][0]
         threshold = 2
         inputPlayer = 0
-        if (currentFrame[0] % 10 == 0):
-            inputPlayer += Input["UP"]
+        if (args['currentFrame'][0] % 10 == 0):
+            inputPlayer += utilsHax.Input["UP"]
         if (player.disc.x - ball.x > threshold):
-            inputPlayer += Input["LEFT"]
+            inputPlayer += utilsHax.Input["LEFT"]
         if (player.disc.x - ball.x < -threshold):
-            inputPlayer += Input["RIGHT"]
+            inputPlayer += utilsHax.Input["RIGHT"]
         if (player.disc.y - ball.y > threshold):
-            inputPlayer += Input["UP"]
+            inputPlayer += utilsHax.Input["UP"]
         if (player.disc.y - ball.y < -threshold):
-            inputPlayer += Input["DOWN"]
+            inputPlayer += utilsHax.Input["DOWN"]
         if ((player.disc.x - ball.x) ** 2 + (player.disc.y - ball.y) ** 2 <= (ball.radius + player.disc.radius + 0.05) ** 2):
-            inputPlayer += Input["SHOOT"]
+            inputPlayer += utilsHax.Input["SHOOT"]
         player.inputs = inputPlayer
         return
 
@@ -399,9 +406,13 @@ def playInputs(player, currentFrame, args={}):
         return
 
 
-def draw(currentFrame, discs, playersArray, inputArrayCurr, planes, segments, vertexes, game, haxball, scorableDiscsId, scorableDiscsPos, Input, stadium):
+def draw(currentFrame, inputArrayCurr, game, scorableDiscsId, scorableDiscsPos):
     currentFrame[0] += 1
     scoreIndex = 0
+    discs = game.stadiumUsed['discs']
+    planes = game.stadiumUsed['planes']
+    segments = game.stadiumUsed['segments']
+    vertexes = game.stadiumUsed['vertexes']
 
     for i in range(len(discs)):
         disc = discs[i]
@@ -411,15 +422,13 @@ def draw(currentFrame, discs, playersArray, inputArrayCurr, planes, segments, ve
             scorableDiscsPos[scoreIndex][1] = disc.y
             scoreIndex += 1
 
-    for i in range(len(playersArray)):
-        p = playersArray[i]
+    for i in range(len(game.players)):
+        p = game.players[i]
         if p.team["id"] != 0:
-            if p.bot: 
-                if(p.name == "BOT1"):
-                    p.bot(p, discs, Input, {})
-                else:
-                    p.bot(p,discs,Input,currentFrame, {} )
-            resolvePlayerMovement(p, Input, discs, haxball)
+            if p.bot:
+                p.bot(p, {'currentFrame': currentFrame,
+                          'discs': game.stadiumUsed['discs']})
+            resolvePlayerMovement(p, discs)
             inputArrayCurr[i][1].append(p.inputs)
 
     for d in discs:
@@ -458,17 +467,18 @@ def draw(currentFrame, discs, playersArray, inputArrayCurr, planes, segments, ve
         for disc in discs:
             if disc.x != None:
                 disc.cMask = 39
-        scoreTeam = haxball.Team["SPECTATORS"]
+        scoreTeam = haxVal['Team']["SPECTATORS"]
         for i in range(scoreIndex):
-            scoreTeam = checkGoal([discs[scorableDiscsId[i]].x, discs[scorableDiscsId[i]].y], scorableDiscsPos[i], stadium, haxball)
-            if (scoreTeam != haxball.Team["SPECTATORS"]):
+            scoreTeam = checkGoal(
+                [discs[scorableDiscsId[i]].x, discs[scorableDiscsId[i]].y], scorableDiscsPos[i], game.stadiumUsed)
+            if (scoreTeam != haxVal['Team']["SPECTATORS"]):
                 break
-        if (scoreTeam != haxball.Team["SPECTATORS"]):
+        if (scoreTeam != haxVal['Team']["SPECTATORS"]):
             game.state = 2
             game.timeout = 150
             game.teamGoal = scoreTeam
             game.kickoffReset = scoreTeam["id"] * 8
-            if scoreTeam["id"] == haxball.Team["BLUE"]["id"]:
+            if scoreTeam["id"] == haxVal['Team']["BLUE"]["id"]:
                 game.red += 1
             else:
                 game.blue += 1
@@ -482,7 +492,7 @@ def draw(currentFrame, discs, playersArray, inputArrayCurr, planes, segments, ve
             if ((game.scoreLimit > 0 and (game.red >= game.scoreLimit or game.blue >= game.scoreLimit)) or game.timeLimit > 0 and game.time >= 60 * game.timeLimit and game.red != game.blue):
                 endAnimation(game)
             else:
-                resetPositionDiscs(haxball, discs, stadium, playersArray, game)
+                resetPositionDiscs(game)
 
     elif (game.state == 3):  # "gameEnding"
         game.timeout -= 1
@@ -507,3 +517,104 @@ def normalise(v):
     x = v[0] / (k or 1)
     y = v[1] / (k or 1)
     return [x, y]
+
+def transformStadium(stadium):
+    discs = []
+    for d in stadium["discs"]:
+        discs.append(objHax.Disc(d))
+
+    for d in discs:
+        if (hasattr(d, 'trait')):
+            for key, value in stadium["traits"][d.trait].items():
+                if (key not in d.__dict__.keys()):
+                    setattr(d, key, value)
+        for (key, value) in haxVal['discPhysics'].items():
+            if (key not in d.__dict__.keys()):
+                setattr(d, key, value)
+        d = collisionTransformation(d)
+
+    if (stadium.get("ballPhysics") == None):
+        ballPhysics = objHax.ballPhysics()
+    else:
+        ballPhysics = ballPhysics(stadium["ballPhysics"])
+
+    for key, value in haxVal['ballPhysics'].items():
+        if (hasattr(ballPhysics, key)):
+            setattr(ballPhysics, key, value)
+
+    discs.insert(0, (collisionTransformation(ballPhysics)))
+    stadium["discs"] = discs
+
+    vertexes = []
+    for v in stadium["vertexes"]:
+        vertexes.append(objHax.Vertex(v))
+
+    for v in vertexes:
+        if (hasattr(v, 'trait')):
+            for key, value in stadium["traits"][v.trait].items():
+                if (key not in v.__dict__.keys()):
+                    setattr(v, key, value)
+        for key, value in haxVal['vertexPhysics'].items():
+            if (key not in v.__dict__.keys()):
+                setattr(v, key, value)
+        v = collisionTransformation(v)
+    stadium["vertexes"] = vertexes
+
+    segments = []
+    for s in stadium["segments"]:
+        segments.append(objHax.Segment(s))
+
+    for s in segments:
+        if (hasattr(s, 'trait')):
+            for key, value in stadium["traits"][s.trait].items():
+                if (key not in s.__dict__.keys()):
+                    setattr(s, key, value)
+        for key, value in haxVal['segmentPhysics'].items():
+                if (key not in s.__dict__.keys()):
+                    setattr(s, key, value)
+        s = collisionTransformation(s, vertexes)
+        s = getCurveFSegment(s)
+        s = getStuffSegment(s)
+    stadium["segments"] = segments
+
+    planes = []
+    for p in stadium["planes"]:
+        planes.append(objHax.Plane(p))
+
+    for p in planes:
+        if (hasattr(p, 'trait')):
+            for key, value in stadium["traits"][p.trait].items():
+                if (key not in p.__dict__.keys()):
+                    setattr(p, key, value)
+        for key, value in haxVal['planePhysics'].items():
+            if (key not in p.__dict__.keys()):
+                setattr(p, key, value)
+
+        p = collisionTransformation(p)
+    stadium["planes"] = planes
+
+    goals = []
+    for g in stadium["goals"]:
+        goals.append(objHax.Goal(g))
+
+    for g in goals:
+        if (g.team == "red"):
+            g.team = haxVal['Team']["RED"]
+        else:
+            g.team = haxVal['Team']["BLUE"]
+    stadium["goals"] = goals
+    return stadium
+
+def stadiumCopyObj(stadiumFrom, stadiumTo):
+    stadiumTo["discs"] = [copy.deepcopy(d) for d in stadiumFrom['discs']]
+    stadiumTo["vertexes"] = [copy.deepcopy(v) for v in stadiumFrom['vertexes']]
+    stadiumTo["segments"] = [copy.deepcopy(s) for s in stadiumFrom['segments']]
+    stadiumTo["planes"] = [copy.deepcopy(p) for p in stadiumFrom['planes']]
+    stadiumTo["goals"] = [copy.deepcopy(g) for g in stadiumFrom['goals']]
+    return stadiumTo
+
+
+def addPlayer(game, name, avatar, team, controls, bot):
+    player = objHax.Player(name, avatar, team, controls, bot)
+    setPlayerDefaultProperties(player, game.stadiumUsed)
+    game.players.append(player)
