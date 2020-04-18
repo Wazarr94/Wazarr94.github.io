@@ -1,3 +1,5 @@
+import haxballPackage.utilsHaxBall as utilsHax
+
 class Disc:
     def __init__(self, disc):
         if (disc.get("radius") != None):
@@ -30,13 +32,13 @@ class Disc:
 
 
 class ballPhysics(Disc):
-	def __init__(self, haxball):
-		super().__init__(haxball.ballPhysics)
+	def __init__(self):
+		super().__init__(utilsHax.haxballVal['playerPhysics'])
 
 
 class playerPhysics(Disc):
-    def __init__(self, haxball):
-        super().__init__(haxball.playerPhysics)
+    def __init__(self):
+        super().__init__(utilsHax.haxballVal['playerPhysics'])
         self.acceleration = 0.1
         self.kickingAcceleration = 0.07
         self.kickingDamping = 0.96
@@ -44,7 +46,7 @@ class playerPhysics(Disc):
 
 
 class Game:
-    def __init__(self, haxball):
+    def __init__(self, stadiumUsed = None, stadiumStored = None):
         self.state = 0
         self.start = True
         self.timeout = 0
@@ -54,11 +56,14 @@ class Game:
         self.red = 0
         self.blue = 0
         self.time = 0
-        self.teamGoal = haxball.Team["SPECTATORS"]
+        self.teamGoal = utilsHax.haxballVal['Team']["SPECTATORS"]
+        self.players = []
+        self.stadiumUsed = stadiumUsed
+        self.stadiumStored = stadiumStored
 
 
 class Player:
-    def __init__(self, haxball , name=None, avatar=None, team=None, controls=None, bot=None):
+    def __init__(self, name=None, avatar=None, team=None, controls=None, bot=None):
         if (name != None):
             self.name = name
         else:
@@ -67,7 +72,7 @@ class Player:
         if (team != None):
              self.team = team
         else:
-            self.team = haxball.Team["SPECTATORS"]
+            self.team = utilsHax.haxballVal['Team']["SPECTATORS"]
 
         if (avatar != None):
             self.avatar = avatar
@@ -77,7 +82,8 @@ class Player:
         if (controls != None):
              self.controls = controls
         else:
-            self.controls = [["ArrowUp"], ["ArrowLeft"], ["ArrowDown"], ["ArrowRight"], ["KeyX"]]
+            self.controls = [["ArrowUp"], ["ArrowLeft"],
+                             ["ArrowDown"], ["ArrowRight"], ["KeyX"]]
 
         if (bot != None):
             self.bot = bot
@@ -154,95 +160,3 @@ class Goal:
 
         if (goal.get("trait") != None):
             self.trait = goal["trait"]
-
-
-class Haxball:
-    def __init__(self):
-        self.Team = {
-            "RED": {
-                "name": "t-red",
-                "id": 1,
-                "color": 'rgb(229, 110, 86)',
-                "cGroup": 2
-            },
-            "BLUE": {
-                "name": "t-blue",
-                "id": 2,
-                "color": 'rgb(86,137,229)',
-                "cGroup": 4
-            },
-            "SPECTATORS": {
-                "name": "t-spectators",
-                "id": 0,
-                "color": None,
-                "cGroup": 0
-            },
-        }
-        self.playerPhysics = {
-            "radius": 15,
-            "bCoef": 0.5,
-            "invMass": 0.5,
-            "damping": 0.96,
-            "acceleration": 0.1,
-            "kickingAcceleration": 0.07,
-            "kickingDamping": 0.96,
-            "kickStrength": 5,
-            "pos": [0, 0],
-            "speed": [0, 0],
-            "cMask": ["all"],
-            "cGroup": [""]
-        }
-        self.ballPhysics = {
-            "radius": 10,
-            "bCoef": 0.5,
-            "invMass": 1,
-            "damping": 0.99,
-            "color": "FFFFFF",
-            "pos": [0, 0],
-            "speed": [0, 0],
-            "cMask": ["all"],
-            "cGroup": ["ball"]
-        }
-        self.discPhysics = {
-            "radius": 10,
-            "bCoef": 0.5,
-            "invMass": 0,
-            "damping": 0.99,
-            "speed": [0, 0],
-            "color": 'rgb(255,255,255)',
-            "cMask": ["all"],
-            "cGroup": ["all"]
-        }
-        self.segmentPhysics = {
-            "curve": 0,
-            "bCoef": 1,
-            "color": 'rgb(255,255,255)',
-            "cGroup": ["wall"],
-            "cMask": ["all"]
-        }
-        self.planePhysics = {
-            "bCoef": 1,
-            "cGroup": ["wall"],
-            "cMask": ["all"]
-        }
-        self.vertexPhysics = {
-            "bCoef": 1,
-            "cGroup": ["wall"],
-            "cMask": ["all"]
-        }
-        self.collisionFlags = {
-            "": 0,
-            "ball": 1,
-            "red": 2,
-            "blue": 4,
-            "redKO": 8,
-            "blueKO": 16,
-            "wall": 32,
-            "all": 63,
-            "kick": 64,
-            "score": 128,
-            "c0": 268435456,
-            "c1": 536870912,
-            "c2": 1073741824,
-            "c3": -2147483648
-        }
