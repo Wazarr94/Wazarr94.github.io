@@ -324,11 +324,9 @@ var recCheck = (localStorage.getItem("rec") !== "0" && localStorage.getItem("las
 var playersArray = [];
 var arrayRec;
 
-var playSpeed = 1;
-
 if (!recCheck) {
     var a = new Player;
-    a.init("Gouiri", "10", haxball.Team.RED, [[], [], [], [], []]);
+    a.init("Gouiri", "10", haxball.Team.RED, null);
     setPlayerDefaultProperties(a);
     playersArray.push(a);
     var b = new Player;
