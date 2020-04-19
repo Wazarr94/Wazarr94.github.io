@@ -90,3 +90,20 @@ haxballVal = {
         "c3": -2147483648
     }
 }
+
+discProperties = [['acceleration', 1], ['bCoef', 1],
+                  ['cGroup', 1], ['cMask', 1], ['damping', 1], ['invMass', 1],
+                  ['kickStrength', 1], ['kickingAcceleration', 1], ['kickingDamping', 1],
+                  ['radius', 1], ['x', 1], ['xspeed', 1], ['y', 1], ['yspeed', 1]]
+
+vertexProperties = [['bCoef', 1], ['cGroup', 1],
+                    ['cMask', 1], ['x', 1], ['y', 1]]
+
+segmentProperties = [['bCoef', 1], ['cGroup', 1], ['cMask', 1], ['circleCenter', 2],
+                     ['circleRadius', 1], ['curve', 1], ['curveF', 1], ['normal', 2],
+                     ['v0', 2], ['v0Tan', 2], ['v1', 2], ['v1Tan', 2]]
+
+planeProperties = [['bCoef', 1], ['cGroup', 1],
+                   ['cMask', 1], ['dist', 1], ['normal', 2]]
+                   
+goalProperties = [['p0', 2], ['p1', 2], ['team', 1]]
