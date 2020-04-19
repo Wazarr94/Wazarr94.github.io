@@ -328,7 +328,7 @@ var playSpeed = 1;
 
 if (!recCheck) {
     var a = new Player;
-    a.init("Gouiri", "10", haxball.Team.RED, [[], [], [], [], []], resolveBotInputs1);
+    a.init("Gouiri", "10", haxball.Team.RED, [[], [], [], [], []]);
     setPlayerDefaultProperties(a);
     playersArray.push(a);
     var b = new Player;
