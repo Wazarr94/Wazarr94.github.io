@@ -8,7 +8,6 @@
 
 if (localStorage.getItem("rec") == null) localStorage.setItem("rec", "0");
 
-
 var canvas = document.getElementById("canvas_div");
 var ctx = canvas.getContext("2d", { alpha: true });
 
@@ -325,13 +324,15 @@ var recCheck = (localStorage.getItem("rec") !== "0" && localStorage.getItem("las
 var playersArray = [];
 var arrayRec;
 
+var playSpeed = 1;
+
 if (!recCheck) {
     var a = new Player;
-    a.init("Gouiri", "10", haxball.Team.RED);
+    a.init("Gouiri", "10", haxball.Team.RED, [[], [], [], [], []], resolveBotInputs1);
     setPlayerDefaultProperties(a);
     playersArray.push(a);
     var b = new Player;
-    b.init("Bot", "1", haxball.Team.BLUE, [[], [], [], [], []], resolveBotInputs);
+    b.init("Bot", "1", haxball.Team.BLUE, [[], [], [], [], []], resolveBotInputs2);
     setPlayerDefaultProperties(b);
     playersArray.push(b);
     arrayRec = playersArray.map(p => [[p.name, p.avatar, p.team.id], []]);
@@ -734,13 +735,13 @@ function load_tile (name) {
         bg_patterns[name] = ctx.createPattern(tile, null);
         render(stadium);
     };
-    tile.src = name + 'tile.png';
+    tile.src = 'img/' + name + 'tile.png';
 }
 
 function resolvePlayerMovement(player) {
     if (player.disc != null) {
         var playerDisc = player.disc;
-        if ((player.inputs & 16) != 0) {
+        if ((player.inputs & Input.SHOOT) != 0) {
             player.shooting = true;
         }
         else {
