@@ -1,8 +1,8 @@
 import math
 import copy
 import numpy as np
-import haxballPackage.classObject as objHax
-import haxballPackage.utilsHaxBall as utilsHax
+import classObject as objHax
+import utilsHaxball as utilsHax
 
 haxVal = utilsHax.haxballVal
 
@@ -228,9 +228,9 @@ def resolveDDCollision(disc1, disc2):
 
 
 def checkGoal(discPos, discPosPrev, stadium):
-    for i in range(0, len(stadium["goals"])):
+    for i in range(0, len(stadium.goals)):
         check = False
-        goal = stadium["goals"][i]
+        goal = stadium.goals[i]
         point0 = goal.p0
         point1 = goal.p1
         dist_x = discPosPrev[0] - discPos[0]
@@ -304,103 +304,6 @@ def normalise(v):
     x = v[0] / (k or 1)
     y = v[1] / (k or 1)
     return [x, y]
-
-
-def transformStadium(stadium):
-    discs = []
-    for d in stadium["discs"]:
-        discs.append(objHax.Disc(d))
-
-    for d in discs:
-        if (hasattr(d, 'trait')):
-            for key, value in stadium["traits"][d.trait].items():
-                if (key not in d.__dict__.keys()):
-                    setattr(d, key, value)
-        for (key, value) in haxVal['discPhysics'].items():
-            if (key not in d.__dict__.keys()):
-                setattr(d, key, value)
-        d = collisionTransformation(d)
-
-    if (stadium.get("ballPhysics") == None):
-        ballPhysics = objHax.ballPhysics()
-    else:
-        ballPhysics = ballPhysics(stadium["ballPhysics"])
-
-    for key, value in haxVal['ballPhysics'].items():
-        if (hasattr(ballPhysics, key)):
-            setattr(ballPhysics, key, value)
-
-    discs.insert(0, (collisionTransformation(ballPhysics)))
-    stadium["discs"] = discs
-
-    vertexes = []
-    for v in stadium["vertexes"]:
-        vertexes.append(objHax.Vertex(v))
-
-    for v in vertexes:
-        if (hasattr(v, 'trait')):
-            for key, value in stadium["traits"][v.trait].items():
-                if (key not in v.__dict__.keys()):
-                    setattr(v, key, value)
-        for key, value in haxVal['vertexPhysics'].items():
-            if (key not in v.__dict__.keys()):
-                setattr(v, key, value)
-        v = collisionTransformation(v)
-    stadium["vertexes"] = vertexes
-
-    segments = []
-    for s in stadium["segments"]:
-        segments.append(objHax.Segment(s))
-
-    for s in segments:
-        if (hasattr(s, 'trait')):
-            for key, value in stadium["traits"][s.trait].items():
-                if (key not in s.__dict__.keys()):
-                    setattr(s, key, value)
-        for key, value in haxVal['segmentPhysics'].items():
-                if (key not in s.__dict__.keys()):
-                    setattr(s, key, value)
-        s = collisionTransformation(s, vertexes)
-        s.getCurveFSegment()
-        s.getStuffSegment()
-    stadium["segments"] = segments
-
-    planes = []
-    for p in stadium["planes"]:
-        planes.append(objHax.Plane(p))
-
-    for p in planes:
-        if (hasattr(p, 'trait')):
-            for key, value in stadium["traits"][p.trait].items():
-                if (key not in p.__dict__.keys()):
-                    setattr(p, key, value)
-        for key, value in haxVal['planePhysics'].items():
-            if (key not in p.__dict__.keys()):
-                setattr(p, key, value)
-
-        p = collisionTransformation(p)
-    stadium["planes"] = planes
-
-    goals = []
-    for g in stadium["goals"]:
-        goals.append(objHax.Goal(g))
-
-    for g in goals:
-        if (g.team == "red"):
-            g.team = haxVal['Team']["RED"]
-        else:
-            g.team = haxVal['Team']["BLUE"]
-    stadium["goals"] = goals
-    return stadium
-
-
-def stadiumCopyObj(stadiumFrom, stadiumTo):
-    stadiumTo["discs"] = [copy.deepcopy(d) for d in stadiumFrom['discs']]
-    stadiumTo["vertexes"] = [copy.deepcopy(v) for v in stadiumFrom['vertexes']]
-    stadiumTo["segments"] = [copy.deepcopy(s) for s in stadiumFrom['segments']]
-    stadiumTo["planes"] = [copy.deepcopy(p) for p in stadiumFrom['planes']]
-    stadiumTo["goals"] = [copy.deepcopy(g) for g in stadiumFrom['goals']]
-    return stadiumTo
 
 
 def getSizeProp(prop):

@@ -1,8 +1,9 @@
 import json
 import math
 import numpy as np
-import haxballPackage.utilsHaxBall as utilsHax
-import haxballPackage.functions as fnHax
+import copy
+import utilsHaxball as utilsHax
+import functions as fnHax
 
 haxVal = utilsHax.haxballVal
 
@@ -64,20 +65,22 @@ class playerPhysics(Disc):
 
 
 class Game:
-    def __init__(self, stadiumUsed = None, stadiumStored = None):
+    def __init__(self, stadiumFileName = None, timeLimit = 3, scoreLimit = 3, kickoffReset = 1, overtime = True):
         self.state = 0
         self.start = True
         self.timeout = 0
-        self.timeLimit = 3
-        self.scoreLimit = 3
-        self.kickoffReset = 8
+        self.timeLimit = timeLimit
+        self.scoreLimit = scoreLimit
+        self.kickoffReset = kickoffReset * 8
         self.red = 0
         self.blue = 0
         self.time = 0
+        self.overtime = overtime
         self.teamGoal = haxVal['Team']["SPECTATORS"]
         self.players = []
-        self.stadiumUsed = stadiumUsed
-        self.stadiumStored = stadiumStored
+        self.stadiumFileName = stadiumFileName
+        self.stadiumUsed = Stadium(stadiumFileName)
+        self.stadiumStored = copy.deepcopy(self.stadiumUsed)
         self.rec = []
         self.currentFrame = -1
         self.observation_space = self.get_obs_space()
@@ -91,10 +94,10 @@ class Game:
         scoreIndex = 0
         scorableDiscsId = [0 for i in range(256)]
         scorableDiscsPos = [[0, 0] for i in range(256)]
-        discs = self.stadiumUsed['discs']
-        planes = self.stadiumUsed['planes']
-        segments = self.stadiumUsed['segments']
-        vertexes = self.stadiumUsed['vertexes']
+        discs = self.stadiumUsed.discs
+        planes = self.stadiumUsed.planes
+        segments = self.stadiumUsed.segments
+        vertexes = self.stadiumUsed.vertexes
 
         for i in range(len(discs)):
             disc = discs[i]
@@ -109,7 +112,7 @@ class Game:
             if p.team["id"] != 0:
                 if p.bot:
                     p.bot(p, {'currentFrame': self.currentFrame,
-                              'discs': self.stadiumUsed['discs']})
+                              'discs': self.stadiumUsed.discs})
                 fnHax.resolvePlayerMovement(p, discs)
                 self.rec[i][1].append(p.inputs)
 
@@ -165,13 +168,13 @@ class Game:
                 else:
                     self.blue += 1
             else:
-                if (self.timeLimit > 0 and self.time >= 60 * self.timeLimit and self.red != self.blue):
+                if (self.timeLimit > 0 and self.time >= 60 * self.timeLimit and (self.red != self.blue or not self.overtime)):
                     self.endAnimation()
 
         elif (self.state == 2):  # "goalScored"
             self.timeout -= 1
             if (self.timeout <= 0):
-                if ((self.scoreLimit > 0 and (self.red >= self.scoreLimit or self.blue >= self.scoreLimit)) or self.timeLimit > 0 and self.time >= 60 * self.timeLimit and self.red != self.blue):
+                if ((self.scoreLimit > 0 and (self.red >= self.scoreLimit or self.blue >= self.scoreLimit)) or self.timeLimit > 0 and self.time >= 60 * self.timeLimit and (self.red != self.blue or not self.overtime)):
                     self.endAnimation()
                 else:
                     self.resetPositionDiscs()
@@ -186,8 +189,8 @@ class Game:
     
     def resetPositionDiscs(self):
         self.state = 0
-        self.stadiumUsed['discs'][0].setDiscDefaultProperties(
-            self.stadiumStored['discs'][0])
+        self.stadiumUsed.discs[0].setDiscDefaultProperties(
+            self.stadiumStored.discs[0])
         teamArray = [0, 0, 0]
         for i in range(len(self.players)):
             player = self.players[i]
@@ -198,7 +201,7 @@ class Game:
                 fact = valueArr + 1 >> 1
                 if ((valueArr % 2) == 1):
                     fact = -fact
-                pos_x = self.stadiumStored['spawnDistance'] * (2 * teamP['id'] - 3)
+                pos_x = self.stadiumStored.spawnDistance * (2 * teamP['id'] - 3)
                 pos_y = 55 * fact
                 player.disc.x = pos_x
                 player.disc.y = pos_y
@@ -219,28 +222,28 @@ class Game:
 
     def reset_game(self):
         playerStore = [[p.name, p.avatar, p.team, p.controls, p.bot] for p in self.players]
-        self = Game(self.stadiumStored, self.stadiumStored)
+        self = Game(self.stadiumFileName, self.timeLimit, self.scoreLimit, self.kickoffReset / 8, self.overtime)
         for arr in playerStore:
             self.addPlayer(Player(arr[0], arr[1], arr[2], arr[3], arr[4]))
 
     def saveRecording(self, fileName):
-        with open(fileName, 'w+') as f:
+        with open(f'recordings/{fileName}', 'w+') as f:
             json_rec = json.dumps(self.rec, separators=(',', ':'))
             f.write(json_rec)
 
     def get_stadium_obs_space(self):
-        generalList = [self.stadiumUsed['height'], self.stadiumUsed['spawnDistance'], self.stadiumUsed['height']]
+        generalList = [self.stadiumUsed.height, self.stadiumUsed.spawnDistance, self.stadiumUsed.height]
         discList = [[np.nan for i in range(fnHax.getSizeProp(utilsHax.discProperties))] for j in range(256)]
         vertexList = [[np.nan for i in range(fnHax.getSizeProp(utilsHax.vertexProperties))] for j in range(256)]
         segmentList = [[np.nan for i in range(fnHax.getSizeProp(utilsHax.segmentProperties))] for j in range(256)]
         planeList = [[np.nan for i in range(fnHax.getSizeProp(utilsHax.planeProperties))] for j in range(256)]
         goalList = [[np.nan for i in range(fnHax.getSizeProp(utilsHax.goalProperties))] for j in range(256)]
 
-        discs = self.stadiumUsed['discs']
-        planes = self.stadiumUsed['planes']
-        segments = self.stadiumUsed['segments']
-        vertexes = self.stadiumUsed['vertexes']
-        goals = self.stadiumUsed['goals']
+        discs = self.stadiumUsed.discs
+        planes = self.stadiumUsed.planes
+        segments = self.stadiumUsed.segments
+        vertexes = self.stadiumUsed.vertexes
+        goals = self.stadiumUsed.goals
 
         for i in range(len(discs)):
             discList[i] = list(np.hstack(fnHax.transformObjectToList(discs[i], utilsHax.discProperties)))
@@ -262,7 +265,7 @@ class Game:
 
     def update_obs_space(self):
         discList = [[np.nan for i in range(fnHax.getSizeProp(utilsHax.discProperties))] for j in range(256)]
-        discs = self.stadiumUsed['discs']
+        discs = self.stadiumUsed.discs
         for i in range(len(discs)):
             discList[i] = list(np.hstack(fnHax.transformObjectToList(discs[i], utilsHax.discProperties)))
         self.observation_space = list(np.hstack(self.get_game_obs_space() + discList)) + self.observation_space[3591:]
@@ -307,7 +310,7 @@ class Player:
             if (self.disc == None):
                 b = playerPhysics()
                 self.disc = b
-                stadium['discs'].append(b)
+                stadium.discs.append(b)
 
             c = fnHax.collisionTransformation(Disc(haxVal['playerPhysics']))
             self.disc.radius = c.radius
@@ -319,7 +322,7 @@ class Player:
             else:
                 self.disc.cMask = 39 + haxVal['collisionFlags']["blueKO"]
             self.disc.cGroup = self.team["cGroup"] | c.cGroup
-            self.disc.x = (2 * self.team["id"] - 3) * stadium["width"]
+            self.disc.x = (2 * self.team["id"] - 3) * stadium.width
             self.disc.y = 0
             self.disc.xspeed = 0
             self.disc.yspeed = 0
@@ -439,3 +442,118 @@ class Goal:
 
         if (goal.get("trait") != None):
             self.trait = goal["trait"]
+
+
+class Stadium:
+    def __init__(self, stadiumFile = None):
+        if (stadiumFile != None):
+            with open(f'stadiums/{stadiumFile}', 'r') as f:
+                stad = json.loads(f.read())
+            self.discs = stad['discs']
+            self.planes = stad['planes']
+            self.segments = stad['segments']
+            self.vertexes = stad['vertexes']
+            self.goals = stad['goals']
+            self.height = stad['height']
+            self.width = stad['width']
+            self.spawnDistance = stad['spawnDistance']
+
+            if (stad.get("traits") == None):
+                self.traits = {}
+            else:
+                self.traits = stad['traits']
+                
+            if (stad.get("ballPhysics") == None):
+                self.ballPhysics = ballPhysics()
+            else:
+                self.ballPhysics = ballPhysics(stad['ballPhysics'])
+            self.transformStadium()
+        else:
+            self.discs = None
+            self.planes = None
+            self.segments = None
+            self.vertexes = None
+            self.goals = None
+            self.trait = None
+            self.ballPhysics = None
+    
+    def transformStadium(self):
+        discs = []
+        for d in self.discs:
+            discs.append(Disc(d))
+
+        for d in discs:
+            if (hasattr(d, 'trait')):
+                for key, value in self.traits[d.trait].items():
+                    if (key not in d.__dict__.keys()):
+                        setattr(d, key, value)
+            for (key, value) in haxVal['discPhysics'].items():
+                if (key not in d.__dict__.keys()):
+                    setattr(d, key, value)
+            d = fnHax.collisionTransformation(d)
+
+        for key, value in haxVal['ballPhysics'].items():
+            if (hasattr(self.ballPhysics, key)):
+                setattr(self.ballPhysics, key, value)
+
+        discs.insert(0, (fnHax.collisionTransformation(self.ballPhysics)))
+        self.discs= discs
+
+        vertexes = []
+        for v in self.vertexes:
+            vertexes.append(Vertex(v))
+
+        for v in vertexes:
+            if (hasattr(v, 'trait')):
+                for key, value in self.traits[v.trait].items():
+                    if (key not in v.__dict__.keys()):
+                        setattr(v, key, value)
+            for key, value in haxVal['vertexPhysics'].items():
+                if (key not in v.__dict__.keys()):
+                    setattr(v, key, value)
+            v = fnHax.collisionTransformation(v)
+        self.vertexes = vertexes
+
+        segments = []
+        for s in self.segments:
+            segments.append(Segment(s))
+
+        for s in segments:
+            if (hasattr(s, 'trait')):
+                for key, value in self.traits[s.trait].items():
+                    if (key not in s.__dict__.keys()):
+                        setattr(s, key, value)
+            for key, value in haxVal['segmentPhysics'].items():
+                    if (key not in s.__dict__.keys()):
+                        setattr(s, key, value)
+            s = fnHax.collisionTransformation(s, vertexes)
+            s.getCurveFSegment()
+            s.getStuffSegment()
+        self.segments = segments
+
+        planes = []
+        for p in self.planes:
+            planes.append(Plane(p))
+
+        for p in planes:
+            if (hasattr(p, 'trait')):
+                for key, value in self.traits[p.trait].items():
+                    if (key not in p.__dict__.keys()):
+                        setattr(p, key, value)
+            for key, value in haxVal['planePhysics'].items():
+                if (key not in p.__dict__.keys()):
+                    setattr(p, key, value)
+
+            p = fnHax.collisionTransformation(p)
+        self.planes = planes
+
+        goals = []
+        for g in self.goals:
+            goals.append(Goal(g))
+
+        for g in goals:
+            if (g.team == "red"):
+                g.team = haxVal['Team']["RED"]
+            else:
+                g.team = haxVal['Team']["BLUE"]
+        self.goals = goals

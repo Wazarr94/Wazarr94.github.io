@@ -5,7 +5,7 @@ from gym import error, spaces, utils
 from gym.utils import seeding
 import classObject as objHax
 import functions as fnHax
-import utilsHaxBall as utilsHax
+import utilsHaxball as utilsHax
 
 class Agent(objHax.Player):
     def __init__(self, player):
