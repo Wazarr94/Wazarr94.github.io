@@ -65,7 +65,7 @@ class playerPhysics(Disc):
 
 
 class Game:
-    def __init__(self, stadiumFileName = None, timeLimit = 3, scoreLimit = 3, kickoffReset = 8, overtime = True):
+    def __init__(self, stadiumFileName = None, timeLimit = 3, scoreLimit = 3, kickoffReset = 8, overtime = True, maxMinutes = math.inf):
         self.state = 0
         self.start = True
         self.timeout = 0
@@ -76,6 +76,7 @@ class Game:
         self.blue = 0
         self.time = 0
         self.overtime = overtime
+        self.maxMinutes = maxMinutes
         self.teamGoal = haxVal['Team']["SPECTATORS"]
         self.players = []
         self.stadiumFileName = stadiumFileName
@@ -140,6 +141,9 @@ class Game:
                     if (((d_a.cGroup & v.cMask) != 0) and ((d_a.cMask & v.cGroup) != 0)):
                         fnHax.resolveDVCollision(d_a, v)
 
+        if (self.state != 3 and self.currentFrame >= 60 * 60 * self.maxMinutes):
+            self.endAnimation()
+        
         if (self.state == 0):  # "kickOffReset"
             for disc in discs:
                 if disc.x != None:
@@ -223,7 +227,7 @@ class Game:
 
     def reset_game(self):
         playerStore = [[p.name, p.avatar, p.team, p.controls, p.bot] for p in self.players]
-        self.__init__(self.stadiumFileName, self.timeLimit, self.scoreLimit, self.kickoffReset, self.overtime)
+        self.__init__(self.stadiumFileName, self.timeLimit, self.scoreLimit, self.kickoffReset, self.overtime, self.maxMinutes)
         for arr in playerStore:
             self.addPlayer(Player(arr[0], arr[1], arr[2], arr[3], arr[4]))
 
