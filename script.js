@@ -919,6 +919,7 @@ function resolveDDCollision (disc1, disc2) {
 }
 
 function checkGoal (discPos, discPosPrev) { // discPos : current position of scorable disc, discPosPrev : position just before
+    if (stadium.goals == undefined) return haxball.Team.SPECTATORS;
     for (var i = 0; i < stadium.goals.length; i++) {
         var check;
         var goal = stadium.goals[i];

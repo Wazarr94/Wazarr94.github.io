@@ -1,8 +1,8 @@
 import math
 import copy
 import numpy as np
-import classObject as objHax
-import utilsHaxball as utilsHax
+import haxballPackage.classObject as objHax
+import haxballPackage.utilsHaxball as utilsHax
 
 haxVal = utilsHax.haxballVal
 
