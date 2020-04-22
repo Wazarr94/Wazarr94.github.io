@@ -141,9 +141,6 @@ class Game:
                     if (((d_a.cGroup & v.cMask) != 0) and ((d_a.cMask & v.cGroup) != 0)):
                         fnHax.resolveDVCollision(d_a, v)
 
-        if (self.state != 3 and self.currentFrame >= 60 * 60 * self.maxMinutes):
-            self.endAnimation()
-        
         if (self.state == 0):  # "kickOffReset"
             for disc in discs:
                 if disc.x != None:
@@ -190,6 +187,9 @@ class Game:
                 self.start = False
                 return True
 
+        if (self.state != 3 and self.currentFrame >= 60 * 60 * self.maxMinutes):
+            self.endAnimation()
+        
         return False
     
     def resetPositionDiscs(self):

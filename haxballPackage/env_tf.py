@@ -1,7 +1,7 @@
 import numpy as np
-import classObject as objHax
-import functions as fnHax
-import utilsHaxball as utilsHax
+import haxballPackage.classObject as objHax
+import haxballPackage.functions as fnHax
+import haxballPackage.utilsHaxball as utilsHax
 
 from tf_agents.environments import py_environment
 from tf_agents.environments import tf_environment
@@ -49,7 +49,7 @@ class HaxballEnv(py_environment.PyEnvironment):
         if self._episode_ended:
             return self.reset()
         for i in range(len(action)):
-            self.game.players[i].inputs = action[i]
+            self.game.players[i].inputs = int(action[i])
         self._episode_ended = self.game.step()
         self._state = self.game.get_obs_space()
         rewards = [agent.calc_reward(self.game) for agent in self.agents]
