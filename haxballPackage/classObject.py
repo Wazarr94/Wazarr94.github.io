@@ -86,8 +86,8 @@ class Game:
         self.currentFrame = -1
         self.observation_space = self.get_obs_space()
 
-    def addPlayer(self, player):
-        player.setPlayerDefaultProperties(self.stadiumUsed)
+    def add_player(self, player):
+        player.set_player_default_properties(self.stadiumUsed)
         self.players.append(player)
         self.observation_space = self.get_obs_space()
 
@@ -171,15 +171,15 @@ class Game:
                     self.blue += 1
             else:
                 if (self.timeLimit > 0 and self.time >= 60 * self.timeLimit and (self.red != self.blue or not self.overtime)):
-                    self.endAnimation()
+                    self.end_animation()
 
         elif (self.state == 2):  # "goalScored"
             self.timeout -= 1
             if (self.timeout <= 0):
                 if ((self.scoreLimit > 0 and (self.red >= self.scoreLimit or self.blue >= self.scoreLimit)) or self.timeLimit > 0 and self.time >= 60 * self.timeLimit and (self.red != self.blue or not self.overtime)):
-                    self.endAnimation()
+                    self.end_animation()
                 else:
-                    self.resetPositionDiscs()
+                    self.reset_position_discs()
 
         elif (self.state == 3):  # "gameEnding"
             self.timeout -= 1
@@ -188,18 +188,18 @@ class Game:
                 return True
 
         if (self.state != 3 and self.currentFrame >= 60 * 60 * self.maxMinutes):
-            self.endAnimation()
+            self.end_animation()
         
         return False
     
-    def resetPositionDiscs(self):
+    def reset_position_discs(self):
         self.state = 0
         self.stadiumUsed.discs[0].setDiscDefaultProperties(
             self.stadiumStored.discs[0])
         teamArray = [0, 0, 0]
         for i in range(len(self.players)):
             player = self.players[i]
-            player.setPlayerDefaultProperties(self.stadiumUsed)
+            player.set_player_default_properties(self.stadiumUsed)
             teamP = player.team
             if (teamP != haxVal['Team']["SPECTATORS"]):
                 valueArr = teamArray[teamP['id']]
@@ -212,13 +212,13 @@ class Game:
                 player.disc.y = pos_y
                 teamArray[teamP['id']] += 1
 
-    def endAnimation(self):
+    def end_animation(self):
         self.state = 3
         self.timeout = 300
 
     def start_game(self):
         self.rec = [[[p.name, p.avatar, p.team["id"]], []] for p in self.players]
-        self.resetPositionDiscs()
+        self.reset_position_discs()
 
     def play_game(self):
         done = False
@@ -229,9 +229,9 @@ class Game:
         playerStore = [[p.name, p.avatar, p.team, p.controls, p.bot] for p in self.players]
         self.__init__(self.stadiumFileName, self.timeLimit, self.scoreLimit, self.kickoffReset, self.overtime, self.maxMinutes)
         for arr in playerStore:
-            self.addPlayer(Player(arr[0], arr[1], arr[2], arr[3], arr[4]))
+            self.add_player(Player(arr[0], arr[1], arr[2], arr[3], arr[4]))
 
-    def saveRecording(self, fileName):
+    def save_recording(self, fileName):
         with open(f'recordings/{fileName}', 'w+') as f:
             json_rec = json.dumps(self.rec, separators=(',', ':'))
             f.write(json_rec)
@@ -283,7 +283,7 @@ class Player:
         self.shotReset = False
         self.spawnPoint = 0
 
-    def setPlayerDefaultProperties(self, stadium):
+    def set_player_default_properties(self, stadium):
         if (self.team == haxVal["Team"]["SPECTATORS"]):
             self.disc = None
         else:
@@ -308,7 +308,7 @@ class Player:
             self.disc.xspeed = 0
             self.disc.yspeed = 0
 
-    def checkKick(self):
+    def check_kick(self):
         if (self.shotReset):
             return not(self.shooting)
         return self.shooting
@@ -352,7 +352,7 @@ class Segment:
         if (segment.get("curve") != None):
             self.curve = segment["curve"]
 
-    def getStuffSegment(self):
+    def get_stuff_segment(self):
         if (hasattr(self, "curveF")):
             segV1 = {"x": self.v1[0], "y": self.v1[1]}
             segV0 = {"x": self.v0[0], "y": self.v0[1]}
@@ -381,7 +381,7 @@ class Segment:
             dist = math.sqrt(dist_x * dist_x + dist_y * dist_y)
             setattr(self, 'normal', [dist_y / dist, dist_x / dist])
 
-    def getCurveFSegment(self):
+    def get_curvef_segment(self):
         a = self.curve
         a *= .017453292519943295
         if (a < 0):
@@ -448,7 +448,7 @@ class Stadium:
                 self.ballPhysics = ballPhysics()
             else:
                 self.ballPhysics = ballPhysics(stad['ballPhysics'])
-            self.transformStadium()
+            self.transform_stadium()
         else:
             self.discs = []
             self.planes = []
@@ -458,7 +458,7 @@ class Stadium:
             self.traits = {}
             self.ballPhysics = ballPhysics()
     
-    def transformStadium(self):
+    def transform_stadium(self):
         discs = []
         for d in self.discs:
             discs.append(Disc(d))
@@ -508,8 +508,8 @@ class Stadium:
                     if (key not in s.__dict__.keys()):
                         setattr(s, key, value)
             s = fnHax.collisionTransformation(s, vertexes)
-            s.getCurveFSegment()
-            s.getStuffSegment()
+            s.get_curvef_segment()
+            s.get_stuff_segment()
         self.segments = segments
 
         planes = []

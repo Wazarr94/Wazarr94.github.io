@@ -55,7 +55,7 @@ def resolvePlayerMovement(player, discs):
             player.shooting = False
             player.shotReset = False
 
-        if (player.checkKick()):
+        if (player.check_kick()):
             kickDone = False
             for d in discs:
                 if ((d.cGroup & haxVal['collisionFlags']["kick"]) != 0 and d != playerDisc):
@@ -89,7 +89,7 @@ def resolvePlayerMovement(player, discs):
 
         direction = normalise(direction)
 
-        if (player.checkKick()):
+        if (player.check_kick()):
             playerDisc.xspeed = playerDisc.xspeed + \
                 direction[0] * playerDisc.kickingAcceleration
             playerDisc.yspeed = playerDisc.yspeed + \

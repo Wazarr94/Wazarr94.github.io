@@ -18,13 +18,28 @@ class Agent(objHax.Player):
         super().__init__(player.name, player.avatar,
                          player.team, player.controls, player.bot)
         self.reward = 0
+        self.discount = 0
         self.total_reward = 0
+        self.count_inactivity = 0
+        self.max_inactivity = 10
 
-    def calc_reward(self, env):
-        return 0
-
-    def calc_discount(self, env):
-        return 0
+    def calc_reward_and_discount(self, env):
+        self.reward = 0
+        if env.game.start == False:
+            if (env.game.red == 1 and self.team.id == 1) or (env.game.blue == 1 and self.team.id == 2):
+                self.reward += 1000
+            else:
+                self.reward -= 1000
+        
+        if env.game.state == 0 and env.game.kickoffReset == 8 * self.team.id:
+            self.count_inactivity += 1
+        else:
+            self.count_inactivity = 0
+        
+        if self.count_inactivity > self.max_inactivity * 60:
+                self.reward -= 10 
+        self.discount = 0
+        self.total_reward += self.reward * (1 - self.discount)
 
 
 class HaxballEnv(py_environment.PyEnvironment):
@@ -52,11 +67,11 @@ class HaxballEnv(py_environment.PyEnvironment):
             self.game.players[i].inputs = int(action[i])
         self._episode_ended = self.game.step()
         self._state = self.game.get_obs_space()
-        rewards = [agent.calc_reward(self.game) for agent in self.agents]
-        discounts = [agent.calc_discount(self.game) for agent in self.agents]
+        for agent in self.agents:
+            agent.calc_reward_and_discount(self)
 
         if self._episode_ended:
-            return ts.termination(np.array(self._state, dtype=np.float32), 1)
+            return ts.termination(np.array(self._state, dtype=np.float32), 0)
         else:
             return ts.transition(np.array(self._state, dtype=np.float32), reward=0, discount=1)
 
