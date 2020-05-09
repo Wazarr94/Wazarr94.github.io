@@ -320,9 +320,9 @@ input.addEventListener('change', handleFile, false);
 var fileread = new FileReader();
 fileread.addEventListener('loadend', loadFileRec, false);
 
-var recCheck = (localStorage.getItem("rec") !== "0" && localStorage.getItem("last") != null);
+var recCheck = (localStorage.getItem("rec") === "1" && localStorage.getItem("last") != null) || (localStorage.getItem("rec") === "2" && localStorage.getItem("file") != null);
 var playersArray = [];
-var arrayRec;
+var arrayRec = [];
 
 if (!recCheck) {
     var a = new Player;
@@ -337,7 +337,12 @@ if (!recCheck) {
 }
 else {
     if (localStorage.getItem("rec") == "1") arrayRec = JSON.parse(localStorage.getItem("last"));
-    else if (localStorage.getItem("rec") == "2") arrayRec = JSON.parse(localStorage.getItem("file"));
+    else if (localStorage.getItem("rec") == "2") {
+        arrayRec = JSON.parse(localStorage.getItem("file"));
+        game.kickoffReset = arrayRec[0];
+        arrayRec.shift();
+        arrayRec = arrayRec[0]
+    }
     let spec = new Player;
     spec.init("spec", "1", haxball.Team.SPECTATORS);
     setPlayerDefaultProperties(spec);
@@ -395,16 +400,9 @@ function handleFile () {
     fileread.readAsBinaryString(file);
 }
 
-function loadFileRec () {
-    var string = fileread.result;
-    try {
-        var replay = JSON.parse(string);
-    }
-    catch (error) {
-        window.alert("Error loading the recording");
-        return;
-    }
-    localStorage.setItem("file", JSON.stringify(replay));
+function loadFileRec() {
+    var replay = fileread.result;
+    localStorage.setItem("file", replay);
     localStorage.setItem("rec", "2");
     document.location.reload(true);
 }
@@ -1077,6 +1075,7 @@ function draw () {
     else if (game.state == 3) { // "gameEnding"
         if (!reloadCheck) {
             if (!recCheck) {
+                inputArrayCurr = [game.kickoffReset, inputArrayCurr];
                 localStorage.setItem('last', JSON.stringify(inputArrayCurr));
                 saveRecording(JSON.stringify(inputArrayCurr));
             }

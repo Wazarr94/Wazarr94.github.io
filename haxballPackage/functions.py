@@ -1,17 +1,13 @@
 import math
 import copy
 import numpy as np
-import haxballPackage.classObject as objHax
-import haxballPackage.utilsHaxball as utilsHax
+import classObject as objHax
+import utilsHaxball as utilsHax
 
 haxVal = utilsHax.haxballVal
 
 
-def getInputs(a, b, c, d, e):
-    return (a + b * 2 + c * 4 + d * 8 + e * 16)
-
-
-def collisionTransformation(physics, vertexes=None):
+def collision_transformation(physics, vertexes=None):
     cMask = physics.cMask
     y = 0
     if (type(cMask) is list):
@@ -46,7 +42,7 @@ def collisionTransformation(physics, vertexes=None):
     return physics
 
 
-def resolvePlayerMovement(player, discs):
+def resolve_player_movement(player, discs):
     if (player.disc != None):
         playerDisc = player.disc
         if ((player.inputs & utilsHax.Input["SHOOT"]) != 0):
@@ -319,3 +315,15 @@ def transformObjectToList(obj, props=[]):
                 if (props[i][0] == "team"):
                     objectProperties[i] = objectProperties[i]["id"]
     return objectProperties
+
+
+def game_setup():
+    random = np.random.randint(1, 3)
+    game = objHax.Game('classic.hbs', 1, 1, 8 * random, False, 2)
+    if (random == 1):
+        game.add_player(objHax.Player("BOT1", "1", utilsHax.haxballVal['Team']["RED"]))
+        game.add_player(objHax.Player("BOT2", "1", utilsHax.haxballVal['Team']["BLUE"]))
+    else:
+        game.add_player(objHax.Player("BOT2", "1", utilsHax.haxballVal['Team']["BLUE"]))
+        game.add_player(objHax.Player("BOT1", "1", utilsHax.haxballVal['Team']["RED"]))
+    return game

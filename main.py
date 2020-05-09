@@ -1,7 +1,7 @@
 import json
-import haxballPackage.classObject as objHax
-import haxballPackage.functions as fnHax
-import haxballPackage.utilsHaxball as utilsHax
+import classObject as objHax
+import functions as fnHax
+import utilsHaxball as utilsHax
 
 game = objHax.Game('classic.hbs')
 

@@ -91,9 +91,7 @@ haxballVal = {
     }
 }
 
-discProperties = [['acceleration', 1], ['bCoef', 1],
-                  ['cGroup', 1], ['cMask', 1], ['damping', 1], ['invMass', 1],
-                  ['kickStrength', 1], ['kickingAcceleration', 1], ['kickingDamping', 1],
+discProperties = [['bCoef', 1],['cGroup', 1], ['cMask', 1], ['damping', 1], ['invMass', 1],
                   ['radius', 1], ['x', 1], ['xspeed', 1], ['y', 1], ['yspeed', 1]]
 
 vertexProperties = [['bCoef', 1], ['cGroup', 1],

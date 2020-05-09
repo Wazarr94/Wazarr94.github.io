@@ -3,9 +3,9 @@ import math
 import numpy as np
 from gym import error, spaces, utils
 from gym.utils import seeding
-import haxballPackage.classObject as objHax
-import haxballPackage.functions as fnHax
-import haxballPackage.utilsHaxball as utilsHax
+import classObject as objHax
+import functions as fnHax
+import utilsHaxball as utilsHax
 
 class Agent(objHax.Player):
     def __init__(self, player):

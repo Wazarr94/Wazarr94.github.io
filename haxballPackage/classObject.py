@@ -2,8 +2,8 @@ import json
 import math
 import numpy as np
 import copy
-import haxballPackage.utilsHaxball as utilsHax
-import haxballPackage.functions as fnHax
+import utilsHaxball as utilsHax
+import functions as fnHax
 
 haxVal = utilsHax.haxballVal
 
@@ -115,8 +115,8 @@ class Game:
                 if p.bot:
                     p.bot(p, {'currentFrame': self.currentFrame,
                               'discs': self.stadiumUsed.discs})
-                fnHax.resolvePlayerMovement(p, discs)
-                self.rec[i][1].append(p.inputs)
+                fnHax.resolve_player_movement(p, discs)
+                self.rec[1][i][1].append(p.inputs)
 
         for d in discs:
             d.x += d.xspeed
@@ -185,7 +185,7 @@ class Game:
             self.timeout -= 1
             if (self.timeout <= 0 and self.start):
                 self.start = False
-                return True
+                return True 
 
         if (self.state != 3 and self.currentFrame >= 60 * 60 * self.maxMinutes):
             self.end_animation()
@@ -217,7 +217,8 @@ class Game:
         self.timeout = 300
 
     def start_game(self):
-        self.rec = [[[p.name, p.avatar, p.team["id"]], []] for p in self.players]
+        self.rec = [self.kickoffReset]
+        self.rec.append([[[p.name, p.avatar, p.team["id"]], []] for p in self.players])
         self.reset_position_discs()
 
     def play_game(self):
@@ -293,7 +294,7 @@ class Player:
                 self.disc = b
                 stadium.discs.append(b)
 
-            c = fnHax.collisionTransformation(Disc(haxVal['playerPhysics']))
+            c = fnHax.collision_transformation(Disc(haxVal['playerPhysics']))
             self.disc.radius = c.radius
             self.disc.invMass = c.invMass
             self.disc.damping = c.damping
@@ -471,13 +472,13 @@ class Stadium:
             for (key, value) in haxVal['discPhysics'].items():
                 if (key not in d.__dict__.keys()):
                     setattr(d, key, value)
-            d = fnHax.collisionTransformation(d)
+            d = fnHax.collision_transformation(d)
 
         for key, value in haxVal['ballPhysics'].items():
             if (hasattr(self.ballPhysics, key)):
                 setattr(self.ballPhysics, key, value)
 
-        discs.insert(0, (fnHax.collisionTransformation(self.ballPhysics)))
+        discs.insert(0, (fnHax.collision_transformation(self.ballPhysics)))
         self.discs= discs
 
         vertexes = []
@@ -492,7 +493,7 @@ class Stadium:
             for key, value in haxVal['vertexPhysics'].items():
                 if (key not in v.__dict__.keys()):
                     setattr(v, key, value)
-            v = fnHax.collisionTransformation(v)
+            v = fnHax.collision_transformation(v)
         self.vertexes = vertexes
 
         segments = []
@@ -507,7 +508,7 @@ class Stadium:
             for key, value in haxVal['segmentPhysics'].items():
                     if (key not in s.__dict__.keys()):
                         setattr(s, key, value)
-            s = fnHax.collisionTransformation(s, vertexes)
+            s = fnHax.collision_transformation(s, vertexes)
             s.get_curvef_segment()
             s.get_stuff_segment()
         self.segments = segments
@@ -525,7 +526,7 @@ class Stadium:
                 if (key not in p.__dict__.keys()):
                     setattr(p, key, value)
 
-            p = fnHax.collisionTransformation(p)
+            p = fnHax.collision_transformation(p)
         self.planes = planes
 
         goals = []
