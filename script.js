@@ -397,12 +397,12 @@ function watchLastGame () {
 
 function handleFile () {
     var file = input.files[0];
-    fileread.readAsBinaryString(file);
+    fileread.readAsArrayBuffer(file);
 }
 
 function loadFileRec() {
-    var replay = fileread.result;
-    localStorage.setItem("file", replay);
+    var replay = msgpack.deserialize(fileread.result);
+    localStorage.setItem("file", JSON.stringify(replay));
     localStorage.setItem("rec", "2");
     document.location.reload(true);
 }
@@ -1075,9 +1075,9 @@ function draw () {
     else if (game.state == 3) { // "gameEnding"
         if (!reloadCheck) {
             if (!recCheck) {
-                inputArrayCurr = [game.kickoffReset, inputArrayCurr];
-                localStorage.setItem('last', JSON.stringify(inputArrayCurr));
-                saveRecording(JSON.stringify(inputArrayCurr));
+                inputArrayCurr = msgpack.serialize([game.kickoffReset, inputArrayCurr]);
+                localStorage.setItem('last', inputArrayCurr);
+                saveRecording(inputArrayCurr);
             }
             document.location.reload(true);
             reloadCheck = true;
