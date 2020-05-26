@@ -1,3 +1,4 @@
-# Haxball AI Project
+# Haxball Clone
 
-In this repo, you will find resources to create your HaxBall AI using Machine Learning !
+This project is a clone of the Haxball website. It has the same physics.
+It also allows the implementation of bots.
