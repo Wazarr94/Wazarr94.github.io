@@ -785,7 +785,8 @@ function resolvePlayerMovement(player) {
             if (g) {
                 player.shotReset = true;;
                 if (playerDisc.cMask !== 39) playerDisc.cMask = 39;
-                // TODO : play sound
+                var kickSound = new Audio('audio/kick.mp3');
+                kickSound.play();
             }
         }
         var direction = [0, 0];
