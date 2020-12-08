@@ -14,6 +14,7 @@ var ctx = canvas.getContext("2d", { alpha: true });
 var margin = 0;
 var reloadCheck = false;
 
+var goalSound = new Audio("audio/goal.mp3");
 //==== Program State
 
 // cache of patterns
@@ -964,8 +965,10 @@ function checkGoal(discPos, discPosPrev) { // discPos : current position of scor
                 check = true;
             }
         }
-        if (check)
+        if (check) {
+            goalSound.play();
             return goal.team;
+        }
     }
     return haxball.Team.SPECTATORS;
 }
