@@ -14,6 +14,7 @@ var ctx = canvas.getContext("2d", { alpha: true });
 var margin = 0;
 var reloadCheck = false;
 
+var goalSound = new Audio("audio/goal.mp3");
 //==== Program State
 
 // cache of patterns
@@ -785,7 +786,8 @@ function resolvePlayerMovement(player) {
             if (g) {
                 player.shotReset = true;;
                 if (playerDisc.cMask !== 39) playerDisc.cMask = 39;
-                // TODO : play sound
+                var kickSound = new Audio('audio/kick.mp3');
+                kickSound.play();
             }
         }
         var direction = [0, 0];
@@ -963,8 +965,10 @@ function checkGoal(discPos, discPosPrev) { // discPos : current position of scor
                 check = true;
             }
         }
-        if (check)
+        if (check) {
+            goalSound.play();
             return goal.team;
+        }
     }
     return haxball.Team.SPECTATORS;
 }
