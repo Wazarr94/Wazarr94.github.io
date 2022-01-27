@@ -118,15 +118,15 @@ function goalkeeperBot(player, args = {}) {
     }
     else if (game.state == 1) {
         controllerPoint(player, positionKeeper(player, stadium.goals[0], ball), null, 1);
-        if ((player.disc.x - ball.x) ** 2 + (player.disc.y - ball.y) ** 2 <= (ball.radius + player.disc.radius + 0.1) ** 2) input += Input.SHOOT;
+        if (Math.sqrt((player.disc.x - ball.x) ** 2 + (player.disc.y - ball.y) ** 2) - ball.radius - player.disc.radius < 4) input += Input.SHOOT;
         player.inputs += input;
     }
     else if (game.state == 2) {
         player.inputs = 0;
-        if (currentFrame % 30 < 30 / 2) this.avatar = "😡";
-        else this.avatar = "🤬";
+        if (currentFrame % 30 < 30 / 2) player.avatar = "😡";
+        else player.avatar = "🤬";
         this.avatarContext = createAvatarCanvas();
-        this.avatarPattern = getAvatarPattern(this.avatarContext, this.avatar, this.team === haxball.Team.BLUE ? [getDecimalFromRGB(haxball.Team.BLUE.color)] : [getDecimalFromRGB(haxball.Team.RED.color)]);
+        this.avatarPattern = getAvatarPattern(player.avatarContext, player.avatar, player.team === haxball.Team.BLUE ? [getDecimalFromRGB(haxball.Team.BLUE.color)] : [getDecimalFromRGB(haxball.Team.RED.color)]);
         if (currentFrame % 10 < 2) input += Input.SHOOT;
         player.inputs += input;
     }
@@ -155,4 +155,9 @@ function positionKeeper(player, goal, ball) {
         }
     }
     return intersection;
+}
+
+function alwaysRight(player, args = {}) {
+    player.inputs = input.RIGHT;
+    return
 }
