@@ -530,12 +530,12 @@ function watchLastGame() {
 
 function handleFile() {
     var file = input.files[0];
-    fileread.readAsText(file);
+    fileread.readAsArrayBuffer(file);
 }
 
 function loadFileRec() {
-    var replay = fileread.result;
-    localStorage.setItem('file', replay);
+    var replay = msgpack.deserialize(new Uint8Array(fileread.result));
+    localStorage.setItem('file', JSON.stringify(replay));
     localStorage.setItem('rec', '2');
     document.location.reload(true);
 }
@@ -1355,7 +1355,8 @@ function draw() {
                 if (!recCheck) {
                     inputArrayCurr = [game.kickoffReset, inputArrayCurr];
                     localStorage.setItem('last', JSON.stringify(inputArrayCurr));
-                    saveRecording(JSON.stringify(inputArrayCurr));
+                    recordingFinal = msgpack.serialize(inputArrayCurr)
+                    saveRecording(recordingFinal);
                 }
                 document.location.reload(true);
                 reloadCheck = true;
