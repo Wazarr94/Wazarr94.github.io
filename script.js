@@ -1358,14 +1358,14 @@ function draw() {
                     recordingFinal = msgpack.serialize(inputArrayCurr)
                     saveRecording(recordingFinal);
                 }
-            }
-            game.timeout--;
-            if (game.timeout <= 0 && game.start) {
                 document.location.reload(true);
                 reloadCheck = true;
                 setTimeout(() => {
                     reloadCheck = false;
                 }, 1000);
+            }
+            game.timeout--;
+            if (game.timeout <= 0 && game.start) {
                 game.start = false;
                 for (var i = 0; i < playersArray.length; i++) {
                     var player = playersArray[i];
