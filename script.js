@@ -975,10 +975,10 @@ function resolvePlayerMovement(player) {
             }
         }
         var direction = [0, 0];
-        if ((player.inputs & 1) != 0) direction[1]--;
-        if ((player.inputs & 2) != 0) direction[0]--;
-        if ((player.inputs & 4) != 0) direction[1]++;
-        if ((player.inputs & 8) != 0) direction[0]++;
+        if ((player.inputs & Input.UP) != 0) direction[1]--;
+        if ((player.inputs & Input.LEFT) != 0) direction[0]--;
+        if ((player.inputs & Input.DOWN) != 0) direction[1]++;
+        if ((player.inputs & Input.RIGHT) != 0) direction[0]++;
 
         direction = normalise(direction);
 
@@ -1358,14 +1358,14 @@ function draw() {
                     recordingFinal = msgpack.serialize(inputArrayCurr)
                     saveRecording(recordingFinal);
                 }
+            }
+            game.timeout--;
+            if (game.timeout <= 0 && game.start) {
                 document.location.reload(true);
                 reloadCheck = true;
                 setTimeout(() => {
                     reloadCheck = false;
                 }, 1000);
-            }
-            game.timeout--;
-            if (game.timeout <= 0 && game.start) {
                 game.start = false;
                 for (var i = 0; i < playersArray.length; i++) {
                     var player = playersArray[i];
