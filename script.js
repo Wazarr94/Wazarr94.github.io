@@ -93,7 +93,7 @@ Player.prototype = {
         ]);
         this.nicknameCanvasContext = drawTextNickCanvas(
             b.getContext('2d', null),
-            name
+            this.name
         );
         this.inputs = 0;
         this.shooting = false;
