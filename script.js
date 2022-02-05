@@ -1,10 +1,9 @@
 // TODO : Finish frame animation (include time)
-// TODO : Sound
 // TODO : Goal announcements
 // TODO : Clean-up
 // TODO : Chat (for commands)
 // TODO : Menu
-// TODO : Recording system
+// TODO : Improve recording system
 
 if (localStorage.getItem('rec') == null) localStorage.setItem('rec', '0');
 
@@ -376,7 +375,7 @@ var recCheck =
 var playersArray = [];
 var arrayRec = [];
 var kickArray = [];
-var triggerDistance = 10 + 5.8 + 0.01;
+var triggerDistance = 15 + 10 + 0.01;
 
 if (!recCheck) {
     var a = new Player();
