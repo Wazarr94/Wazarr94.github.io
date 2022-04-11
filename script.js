@@ -233,7 +233,7 @@ var haxball = {
 };
 
 var zoom_levels = [0.75, 1, 1.25, 1.5, 1.75, 2, 2.25, 2.5];
-var zoom = zoom_levels[6];
+var zoom = zoom_levels[4];
 
 const Input = { LEFT: 2, RIGHT: 8, UP: 1, DOWN: 4, SHOOT: 16 };
 const Kick = {
@@ -516,7 +516,7 @@ function saveRecording(rec) {
         rec,
         `HBReplay-${d.getFullYear()}-${
             d.getMonth() + 1
-        }-${d.getDate()}-${d.getHours()}h${d.getMinutes()}m.hbr`
+        }-${d.getDate()}-${d.getHours()}h${d.getMinutes()}m.hbar`
     );
 }
 
@@ -725,48 +725,58 @@ function setPlayerDefaultProperties(player) {
     }
 }
 
-function setCameraFollow(game, playerPos, widthCal, heightCal, refresh) {
-    var f, g;
+function setCameraFollow(playerPos, widthCanvas, heightCanvas, refresh) {
+    var centerX, centerY;
     if (playerPos != null && cameraFollowMode == 1) {
-        // no camera follow
-        f = playerPos.x;
-        g = playerPos.y;
+        // player follow
+        centerX = playerPos.x;
+        centerY = playerPos.y;
     } else {
-        f = discs[0].x;
-        g = discs[0].y;
+        // ball follow
+        centerX = discs[0].x;
+        centerY = discs[0].y;
         if (playerPos != null) {
-            f = 0.5 * (f + playerPos.x); // center of ball-player x
-            g = 0.5 * (g + playerPos.y); // center of ball-player y
-            var midX = 0.5 * widthCal, // middle of screen x
-                midY = 0.5 * heightCal; // middle of screen y
-            var t = playerPos.x - midX + 50, // lim sup x
-                n = playerPos.y - midY + 50, // lim sup y
-                k = playerPos.x + midX - 50, // lim inf x
-                h = playerPos.y + midY - 50; // lim inf y
-            f = f > k ? k : f < t ? t : f;
-            g = g > h ? h : g < n ? n : g;
+            centerX = 0.5 * (centerX + playerPos.x);
+            centerY = 0.5 * (centerY + playerPos.y);
+            var midX = 0.5 * widthCanvas,
+                midY = 0.5 * heightCanvas;
+            var infX = playerPos.x - midX + 50,
+                infY = playerPos.y - midY + 50,
+                supX = playerPos.x + midX - 50,
+                supY = playerPos.y + midY - 50;
+            centerX = centerX > supX ? supX : centerX < infX ? infX : centerX;
+            centerY = centerY > supY ? supY : centerY < infY ? infY : centerY;
         }
     }
-    n = 60 * refresh;
-    if (n > 1) n = 1;
-    n *= 0.04;
-    cameraFollow.x += (f - cameraFollow.x) * n;
-    cameraFollow.y += (g - cameraFollow.y) * n;
-    checkCameraLimits(widthCal, heightCal, stadium); // stay within stadium limits
+    frames = 60 * refresh;
+    if (frames > 1) frames = 1;
+    smoothingRatio = 0.04;
+    frames *= smoothingRatio;
+    cameraFollow.x += (centerX - cameraFollow.x) * frames;
+    cameraFollow.y += (centerY - cameraFollow.y) * frames;
+    checkCameraLimits(widthCanvas, heightCanvas, stadium); // stay within stadium limits
 }
 
-function checkCameraLimits(widthCal, heightCal, stadium) {
-    if (widthCal > 2 * stadium.width) cameraFollow.x = 0;
-    else if (cameraFollow.x + 0.5 * widthCal > stadium.width)
-        cameraFollow.x = stadium.width - 0.5 * widthCal;
-    else if (cameraFollow.x - 0.5 * widthCal < -stadium.width)
-        cameraFollow.x = -stadium.width + 0.5 * widthCal;
+function checkCameraLimits(widthCanvas, heightCanvas, stadium) {
+    if (widthCanvas > 2 * stadium.width) {
+        cameraFollow.x = 0;
+    }
+    else if (cameraFollow.x + 0.5 * widthCanvas > stadium.width) {
+        cameraFollow.x = stadium.width - 0.5 * widthCanvas;
+    }
+    else if (cameraFollow.x - 0.5 * widthCanvas < -stadium.width) {
+        cameraFollow.x = -stadium.width + 0.5 * widthCanvas;
+    }
 
-    if (heightCal > 2 * stadium.height) cameraFollow.y = 0;
-    else if (cameraFollow.y + 0.5 * heightCal > stadium.height)
-        cameraFollow.y = stadium.height - 0.5 * heightCal;
-    else if (cameraFollow.y - 0.5 * heightCal < -stadium.height)
-        cameraFollow.y = -stadium.height + 0.5 * heightCal;
+    if (heightCanvas > 2 * stadium.height) {
+        cameraFollow.y = 0;
+    }
+    else if (cameraFollow.y + 0.5 * heightCanvas > stadium.height) {
+        cameraFollow.y = stadium.height - 0.5 * heightCanvas;
+    }
+    else if (cameraFollow.y - 0.5 * heightCanvas < -stadium.height) {
+        cameraFollow.y = -stadium.height + 0.5 * heightCanvas;
+    }
 }
 
 function resetPositionDiscs() {
@@ -1416,7 +1426,6 @@ function render(st) {
         canvas_rect[3] - canvas_rect[1]
     );
     setCameraFollow(
-        null,
         playersArray[0].disc,
         canvas.width / zoom,
         canvas.height / zoom,
@@ -1550,13 +1559,13 @@ function renderCones() {
     }
 }
 
-function renderbg(st, ctx) {
-    var bg = st.bg;
+function renderbg(stadium, ctx) {
+    var bg = stadium.bg;
     ctx.save();
 
     if (bg.type == 'grass' || bg.type == 'hockey') {
         ctx.fillStyle = haxball[bg.type].bg_color;
-        ctx.fillRect(-st.width, -st.height, 2 * st.width, 2 * st.height);
+        ctx.fillRect(-stadium.width, -stadium.height, 2 * stadium.width, 2 * stadium.height);
 
         ctx.beginPath();
 
@@ -1596,10 +1605,10 @@ function renderbg(st, ctx) {
         ctx.translate(40, 40);
         ctx.fillStyle = bg_patterns[bg.type];
         ctx.fillRect(
-            -st.width - 50,
-            -st.height - 50,
-            2 * st.width - 40,
-            2 * st.height - 20
+            -stadium.width - 50,
+            -stadium.height - 50,
+            2 * stadium.width - 40,
+            2 * stadium.height - 20
         );
         ctx.restore();
 
@@ -1613,11 +1622,11 @@ function renderbg(st, ctx) {
         ctx.stroke();
     } else if (bg.type == '' && bg.color != undefined) {
         ctx.fillStyle = color_to_style(bg.color);
-        ctx.fillRect(-st.width, -st.height, 2 * st.width, 2 * st.height);
+        ctx.fillRect(-stadium.width, -stadium.height, 2 * stadium.width, 2 * stadium.height);
         document.body.style.background = color_to_style(bg.color);
     } else {
         ctx.fillStyle = haxball.grass.bg_color;
-        ctx.fillRect(-st.width, -st.height, 2 * st.width, 2 * st.height);
+        ctx.fillRect(-stadium.width, -stadium.height, 2 * stadium.width, 2 * stadium.height);
     }
 
     ctx.restore();
